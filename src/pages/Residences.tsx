@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { ResidenceCard } from "@/components/residences/ResidenceCard";
@@ -18,22 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getActiveResidences } from "@/data/mockData";
-import { Residence } from "@/types";
+import { useResidences } from "@/hooks/useResidences";
 
 const Residences = () => {
-  const [residences, setResidences] = useState<Residence[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: residences = [], isLoading, error } = useResidences(true);
   const [cityFilter, setCityFilter] = useState<string>("all");
-
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setResidences(getActiveResidences());
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
 
   const cities = [...new Set(residences.map((r) => r.city))];
   const filteredResidences =
@@ -91,7 +80,13 @@ const Residences = () => {
           </div>
 
           {/* Grid */}
-          {isLoading ? (
+          {error ? (
+            <div className="text-center py-16">
+              <p className="text-destructive text-lg">
+                Failed to load residences. Please try again later.
+              </p>
+            </div>
+          ) : isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {[...Array(3)].map((_, i) => (
                 <ResidenceCardSkeleton key={i} />

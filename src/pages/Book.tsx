@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { format, addMonths } from "date-fns";
 import { CalendarIcon, CheckCircle } from "lucide-react";
@@ -30,7 +30,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
-import { getActiveResidences, getRoomTypesByResidence, getResidenceById } from "@/data/mockData";
+import { useResidences } from "@/hooks/useResidences";
+import { useSettings } from "@/hooks/useSettings";
+import { useCreateBooking } from "@/hooks/useCreateBooking";
+import { useRoomTypes } from "@/hooks/useRoomTypes";
 import { BookingFormData } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
@@ -39,6 +42,7 @@ const Book = () => {
   const preselectedResidence = searchParams.get("residence");
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [bookingId, setBookingId] = useState<string>("");
   const [formData, setFormData] = useState<BookingFormData>({
     residenceId: preselectedResidence || "",
     roomTypeId: "",
@@ -52,10 +56,19 @@ const Book = () => {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof BookingFormData, string>>>({});
 
-  const residences = getActiveResidences();
-  const roomTypes = formData.residenceId ? getRoomTypesByResidence(formData.residenceId) : [];
-  const selectedResidence = formData.residenceId ? getResidenceById(formData.residenceId) : undefined;
-  const minStay = selectedResidence?.minStay || 1;
+  // Firebase hooks
+  const { data: residences = [] } = useResidences(true);
+  const { data: settings } = useSettings();
+  const { data: roomTypes = [] } = useRoomTypes(formData.residenceId);
+  const createBooking = useCreateBooking();
+
+  // Get selected residence
+  const selectedResidence = useMemo(
+    () => residences.find((r) => r.id === formData.residenceId),
+    [residences, formData.residenceId]
+  );
+
+  const minStay = settings?.minimumStayMonths || selectedResidence?.minStay || 1;
 
   useEffect(() => {
     // Reset room type when residence changes
@@ -84,14 +97,24 @@ const Book = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      setIsSubmitted(true);
-      toast({
-        title: "Booking Request Submitted",
-        description: "We'll get back to you within 24 hours.",
-      });
+      try {
+        const id = await createBooking.mutateAsync(formData);
+        setBookingId(id);
+        setIsSubmitted(true);
+        toast({
+          title: "Booking Request Submitted",
+          description: `Your booking reference is ${id}. We'll get back to you within 24 hours.`,
+        });
+      } catch (error) {
+        toast({
+          title: "Booking Failed",
+          description: "There was an error submitting your booking. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -108,8 +131,15 @@ const Book = () => {
                 Thank You!
               </h1>
               <p className="mt-4 text-muted-foreground">
-                Your booking request has been submitted successfully. Our team will
-                review your application and get back to you within 24 hours.
+                Your booking request has been submitted successfully.
+                {bookingId && (
+                  <>
+                    <br />
+                    <span className="font-medium">Booking Reference: {bookingId.slice(0, 8).toUpperCase()}</span>
+                  </>
+                )}
+                <br />
+                Our team will review your application and get back to you within 24 hours.
               </p>
               <Button asChild className="mt-8">
                 <Link to="/">Back to Home</Link>
@@ -395,8 +425,14 @@ const Book = () => {
               </div>
 
               {/* Submit */}
-              <Button type="submit" variant="coral" size="lg" className="w-full">
-                Submit Booking Request
+              <Button
+                type="submit"
+                variant="coral"
+                size="lg"
+                className="w-full"
+                disabled={createBooking.isPending}
+              >
+                {createBooking.isPending ? "Submitting..." : "Submit Booking Request"}
               </Button>
             </div>
           </form>

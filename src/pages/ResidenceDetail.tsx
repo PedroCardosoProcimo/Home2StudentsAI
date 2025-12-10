@@ -10,7 +10,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getResidenceById, getRoomTypesByResidence } from "@/data/mockData";
+import { useResidence } from "@/hooks/useResidence";
+import { ResidenceCardSkeleton } from "@/components/residences/ResidenceCardSkeleton";
 
 const amenityIcons: { [key: string]: React.ElementType } = {
   "High-Speed WiFi": Wifi,
@@ -25,10 +26,25 @@ const amenityIcons: { [key: string]: React.ElementType } = {
 const ResidenceDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const residence = id ? getResidenceById(id) : undefined;
-  const roomTypes = id ? getRoomTypesByResidence(id) : [];
+  const { data, isLoading, error } = useResidence(id);
 
-  if (!residence) {
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="pt-24 md:pt-28 min-h-screen">
+          <div className="container-narrow section-padding">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {[...Array(3)].map((_, i) => (
+                <ResidenceCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !data) {
     return (
       <Layout>
         <div className="pt-24 md:pt-28 min-h-screen">
@@ -47,6 +63,8 @@ const ResidenceDetail = () => {
       </Layout>
     );
   }
+
+  const { residence, roomTypes } = data;
 
   return (
     <Layout>
