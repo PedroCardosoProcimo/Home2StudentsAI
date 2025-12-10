@@ -1,4 +1,4 @@
-import { Residence, RoomType, Feature, Step } from "@/types";
+import { Residence, RoomType, Feature, Step, Booking, Settings } from "@/types";
 
 export const residences: Residence[] = [
   {
@@ -13,6 +13,8 @@ export const residences: Residence[] = [
     active: true,
     startingPrice: 650,
     minStay: 3,
+    createdAt: new Date("2024-01-15"),
+    updatedAt: new Date("2024-06-01"),
   },
   {
     id: "porto-riverside",
@@ -26,6 +28,8 @@ export const residences: Residence[] = [
     active: true,
     startingPrice: 550,
     minStay: 3,
+    createdAt: new Date("2024-02-01"),
+    updatedAt: new Date("2024-05-15"),
   },
   {
     id: "coimbra-university",
@@ -39,6 +43,8 @@ export const residences: Residence[] = [
     active: true,
     startingPrice: 450,
     minStay: 1,
+    createdAt: new Date("2024-03-10"),
+    updatedAt: new Date("2024-07-20"),
   },
   {
     id: "braga-campus",
@@ -52,6 +58,8 @@ export const residences: Residence[] = [
     active: true,
     startingPrice: 400,
     minStay: 1,
+    createdAt: new Date("2024-04-01"),
+    updatedAt: new Date("2024-08-01"),
   },
 ];
 
@@ -142,6 +150,90 @@ export const roomTypes: RoomType[] = [
   },
 ];
 
+export const bookings: Booking[] = [
+  {
+    id: "booking-1",
+    residenceId: "lisbon-central",
+    roomTypeId: "lisbon-studio",
+    checkIn: new Date("2025-02-01"),
+    checkOut: new Date("2025-07-01"),
+    guestName: "Maria Silva",
+    guestEmail: "maria.silva@student.pt",
+    guestPhone: "+351 912 345 678",
+    notes: "Exchange student from Brazil",
+    status: "approved",
+    createdAt: new Date("2024-12-01"),
+  },
+  {
+    id: "booking-2",
+    residenceId: "porto-riverside",
+    roomTypeId: "porto-ensuite",
+    checkIn: new Date("2025-03-01"),
+    checkOut: new Date("2025-08-31"),
+    guestName: "João Santos",
+    guestEmail: "joao.santos@email.com",
+    guestPhone: "+351 923 456 789",
+    status: "pending",
+    createdAt: new Date("2024-12-05"),
+  },
+  {
+    id: "booking-3",
+    residenceId: "coimbra-university",
+    roomTypeId: "coimbra-single",
+    checkIn: new Date("2025-01-15"),
+    checkOut: new Date("2025-06-15"),
+    guestName: "Anna Müller",
+    guestEmail: "anna.mueller@email.de",
+    guestPhone: "+49 176 123 4567",
+    notes: "Erasmus student from Germany",
+    status: "pending",
+    createdAt: new Date("2024-12-08"),
+  },
+  {
+    id: "booking-4",
+    residenceId: "braga-campus",
+    roomTypeId: "braga-ensuite",
+    checkIn: new Date("2025-02-15"),
+    checkOut: new Date("2025-12-15"),
+    guestName: "Pierre Dubois",
+    guestEmail: "pierre.dubois@email.fr",
+    guestPhone: "+33 6 12 34 56 78",
+    status: "approved",
+    createdAt: new Date("2024-11-20"),
+  },
+  {
+    id: "booking-5",
+    residenceId: "lisbon-central",
+    roomTypeId: "lisbon-ensuite",
+    checkIn: new Date("2025-04-01"),
+    checkOut: new Date("2025-09-01"),
+    guestName: "Sofia Costa",
+    guestEmail: "sofia.costa@student.pt",
+    guestPhone: "+351 934 567 890",
+    status: "rejected",
+    createdAt: new Date("2024-11-15"),
+  },
+  {
+    id: "booking-6",
+    residenceId: "porto-riverside",
+    roomTypeId: "porto-studio",
+    checkIn: new Date("2025-05-01"),
+    checkOut: new Date("2025-10-01"),
+    guestName: "Miguel Ferreira",
+    guestEmail: "miguel.ferreira@email.com",
+    guestPhone: "+351 945 678 901",
+    notes: "Medical student, needs quiet room",
+    status: "pending",
+    createdAt: new Date("2024-12-10"),
+  },
+];
+
+export const settings: Settings = {
+  minimumStayMonths: 1,
+  updatedAt: new Date("2024-11-01"),
+  updatedBy: "admin@nineliving.pt",
+};
+
 export const features: Feature[] = [
   {
     icon: "MapPin",
@@ -194,3 +286,27 @@ export const getRoomTypesByResidence = (residenceId: string): RoomType[] => {
 export const getActiveResidences = (): Residence[] => {
   return residences.filter((r) => r.active);
 };
+
+export const getRoomTypeById = (id: string): RoomType | undefined => {
+  return roomTypes.find((r) => r.id === id);
+};
+
+export const getBookingsByStatus = (status?: Booking['status']): Booking[] => {
+  if (!status) return bookings;
+  return bookings.filter((b) => b.status === status);
+};
+
+export const cities = ["Lisbon", "Porto", "Coimbra", "Braga"] as const;
+
+export const amenitiesList = [
+  "WiFi",
+  "Gym",
+  "Study Rooms",
+  "Laundry",
+  "Kitchen",
+  "Cleaning",
+  "Security",
+  "Bike Storage",
+  "Garden",
+  "BBQ Area",
+] as const;

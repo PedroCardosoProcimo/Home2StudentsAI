@@ -10,6 +10,8 @@ export interface Residence {
   active: boolean;
   startingPrice: number;
   minStay: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface RoomType {
@@ -33,6 +35,26 @@ export interface BookingFormData {
   termsAccepted: boolean;
 }
 
+export interface Booking {
+  id: string;
+  residenceId: string;
+  roomTypeId: string;
+  checkIn: Date;
+  checkOut: Date;
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+  notes?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Date;
+}
+
+export interface Settings {
+  minimumStayMonths: 1 | 6 | 10;
+  updatedAt: Date;
+  updatedBy: string;
+}
+
 export interface Feature {
   icon: string;
   title: string;
@@ -43,4 +65,9 @@ export interface Step {
   number: number;
   title: string;
   description: string;
+}
+
+export interface AdminUser {
+  email: string;
+  isAuthenticated: boolean;
 }
