@@ -4,14 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Building2, BedDouble, CalendarCheck, Clock, Plus, ArrowRight } from "lucide-react";
-import { residences, roomTypes, bookings, getResidenceById } from "@/data/mockData";
+import { useAdminResidences } from "@/hooks/admin/useAdminResidences";
+import { useAdminRoomTypes } from "@/hooks/admin/useAdminRoomTypes";
+import { useAdminBookings } from "@/hooks/admin/useAdminBookings";
 import { format } from "date-fns";
+import { useMemo } from "react";
 
 const AdminDashboard = () => {
-  const pendingBookings = bookings.filter((b) => b.status === "pending");
-  const recentBookings = [...bookings]
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 5);
+  const { data: residences = [], isLoading: residencesLoading } = useAdminResidences();
+  const { data: roomTypes = [], isLoading: roomTypesLoading } = useAdminRoomTypes();
+  const { data: bookings = [], isLoading: bookingsLoading } = useAdminBookings();
+
+  const pendingBookings = useMemo(() =>
+    bookings.filter((b) => b.status === "pending"),
+    [bookings]
+  );
+
+  const recentBookings = useMemo(() =>
+    [...bookings]
+      .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())
+      .slice(0, 5),
+    [bookings]
+  );
+
+  const isLoading = residencesLoading || roomTypesLoading || bookingsLoading;
 
   const stats = [
     {
@@ -44,6 +60,14 @@ const AdminDashboard = () => {
       bgColor: "bg-emerald-100",
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <p className="text-muted-foreground">Loading dashboard data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -106,7 +130,7 @@ const AdminDashboard = () => {
             </TableHeader>
             <TableBody>
               {recentBookings.map((booking) => {
-                const residence = getResidenceById(booking.residenceId);
+                const residence = residences.find(r => r.id === booking.residenceId);
                 return (
                   <TableRow key={booking.id}>
                     <TableCell>
@@ -116,12 +140,12 @@ const AdminDashboard = () => {
                       </div>
                     </TableCell>
                     <TableCell>{residence?.name || "Unknown"}</TableCell>
-                    <TableCell>{format(booking.checkIn, "MMM d, yyyy")}</TableCell>
+                    <TableCell>{format(booking.checkIn.toDate(), "MMM d, yyyy")}</TableCell>
                     <TableCell>
                       <StatusBadge status={booking.status} />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {format(booking.createdAt, "MMM d, yyyy")}
+                      {format(booking.createdAt.toDate(), "MMM d, yyyy")}
                     </TableCell>
                   </TableRow>
                 );

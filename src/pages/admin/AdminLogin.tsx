@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 const AdminLogin = () => {
-  const { user, login, isLoading } = useAdminAuth();
+  const { user, login } = useAdminAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  if (user?.isAuthenticated) {
+  if (user) {
     return <Navigate to="/admin" replace />;
   }
 
@@ -26,9 +27,23 @@ const AdminLogin = () => {
       return;
     }
 
-    const success = await login(email, password);
-    if (!success) {
-      setError("Invalid email or password");
+    setSubmitting(true);
+    try {
+      await login(email, password);
+      // Navigation will happen automatically when user state updates
+    } catch (err) {
+      // Handle Firebase auth errors
+      const error = err as { code?: string };
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        setError("Invalid email or password");
+      } else if (error.code === 'auth/invalid-email') {
+        setError("Invalid email format");
+      } else if (error.code === 'auth/too-many-requests') {
+        setError("Too many failed attempts. Please try again later.");
+      } else {
+        setError("An error occurred. Please try again.");
+      }
+      setSubmitting(false);
     }
   };
 
@@ -49,7 +64,7 @@ const AdminLogin = () => {
                 placeholder="admin@nineliving.pt"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={submitting}
               />
             </div>
 
@@ -61,7 +76,7 @@ const AdminLogin = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={submitting}
               />
             </div>
 
@@ -71,8 +86,8 @@ const AdminLogin = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...

@@ -11,14 +11,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { residences as initialResidences, cities, amenitiesList } from "@/data/mockData";
+import { Plus, Search, Pencil, Trash2, Loader2 } from "lucide-react";
+import { cities, amenitiesList } from "@/data/mockData";
 import { Residence } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminResidences, useCreateResidence, useUpdateResidence, useDeleteResidence } from "@/hooks/admin/useAdminResidences";
 
 const AdminResidences = () => {
   const { toast } = useToast();
-  const [residences, setResidences] = useState<Residence[]>(initialResidences);
+  const { data: residences = [], isLoading } = useAdminResidences();
+  const createResidence = useCreateResidence();
+  const updateResidence = useUpdateResidence();
+  const deleteResidence = useDeleteResidence();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -70,43 +75,49 @@ const AdminResidences = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.city || !formData.address || !formData.description) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
       return;
     }
 
-    if (selectedResidence) {
-      // Edit
-      setResidences((prev) =>
-        prev.map((r) =>
-          r.id === selectedResidence.id
-            ? { ...r, ...formData, updatedAt: new Date() }
-            : r
-        )
-      );
-      toast({ title: "Success", description: "Residence updated successfully" });
-    } else {
-      // Add
-      const newResidence: Residence = {
-        ...formData as Residence,
-        id: `residence-${Date.now()}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setResidences((prev) => [...prev, newResidence]);
-      toast({ title: "Success", description: "Residence added successfully" });
+    try {
+      if (selectedResidence) {
+        // Edit
+        await updateResidence.mutateAsync({
+          id: selectedResidence.id,
+          ...formData,
+        });
+        toast({ title: "Success", description: "Residence updated successfully" });
+      } else {
+        // Add
+        await createResidence.mutateAsync(formData as Omit<Residence, 'id' | 'createdAt' | 'updatedAt'>);
+        toast({ title: "Success", description: "Residence added successfully" });
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to save residence. Please try again.",
+        variant: "destructive"
+      });
     }
-
-    setIsModalOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedResidence) {
-      setResidences((prev) => prev.filter((r) => r.id !== selectedResidence.id));
-      toast({ title: "Success", description: "Residence deleted successfully" });
+      try {
+        await deleteResidence.mutateAsync(selectedResidence.id);
+        toast({ title: "Success", description: "Residence deleted successfully" });
+        setIsDeleteDialogOpen(false);
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to delete residence. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
-    setIsDeleteDialogOpen(false);
   };
 
   const toggleAmenity = (amenity: string) => {
@@ -117,6 +128,14 @@ const AdminResidences = () => {
         : [...(prev.amenities || []), amenity],
     }));
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -292,8 +311,19 @@ const AdminResidences = () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={createResidence.isPending || updateResidence.isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={createResidence.isPending || updateResidence.isPending}>
+              {(createResidence.isPending || updateResidence.isPending) ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -308,9 +338,16 @@ const AdminResidences = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogCancel disabled={deleteResidence.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleteResidence.isPending} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleteResidence.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

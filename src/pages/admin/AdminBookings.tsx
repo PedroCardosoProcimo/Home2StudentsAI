@@ -7,15 +7,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Search, Eye, Check, X } from "lucide-react";
-import { bookings as initialBookings, getResidenceById, getRoomTypeById } from "@/data/mockData";
+import { Search, Eye, Check, X, Loader2 } from "lucide-react";
 import { Booking } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInMonths } from "date-fns";
+import { useAdminBookings, useUpdateBookingStatus } from "@/hooks/admin/useAdminBookings";
+import { useAdminResidences } from "@/hooks/admin/useAdminResidences";
+import { useAdminRoomTypes } from "@/hooks/admin/useAdminRoomTypes";
 
 const AdminBookings = () => {
   const { toast } = useToast();
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings);
+  const { data: bookings = [], isLoading: bookingsLoading } = useAdminBookings();
+  const { data: residences = [], isLoading: residencesLoading } = useAdminResidences();
+  const { data: roomTypes = [], isLoading: roomTypesLoading } = useAdminRoomTypes();
+  const updateBookingStatus = useUpdateBookingStatus();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -42,25 +48,38 @@ const AdminBookings = () => {
     setIsConfirmDialogOpen(true);
   };
 
-  const handleStatusChange = () => {
+  const handleStatusChange = async () => {
     if (!selectedBooking || !actionType) return;
 
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === selectedBooking.id
-          ? { ...b, status: actionType === "approve" ? "approved" : "rejected" }
-          : b
-      )
-    );
+    try {
+      await updateBookingStatus.mutateAsync({
+        id: selectedBooking.id,
+        status: actionType === "approve" ? "approved" : "rejected"
+      });
 
-    toast({
-      title: "Success",
-      description: `Booking ${actionType === "approve" ? "approved" : "rejected"} successfully`,
-    });
+      toast({
+        title: "Success",
+        description: `Booking ${actionType === "approve" ? "approved" : "rejected"} successfully`,
+      });
 
-    setIsConfirmDialogOpen(false);
-    setIsDetailModalOpen(false);
+      setIsConfirmDialogOpen(false);
+      setIsDetailModalOpen(false);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to update booking status. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
+
+  if (bookingsLoading || residencesLoading || roomTypesLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -99,7 +118,7 @@ const AdminBookings = () => {
             </TableHeader>
             <TableBody>
               {filteredBookings.map((booking) => {
-                const residence = getResidenceById(booking.residenceId);
+                const residence = residences.find((r) => r.id === booking.residenceId);
                 return (
                   <TableRow key={booking.id}>
                     <TableCell>
@@ -111,15 +130,15 @@ const AdminBookings = () => {
                     <TableCell>{residence?.name || "Unknown"}</TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <p>{format(booking.checkIn, "MMM d, yyyy")}</p>
-                        <p className="text-muted-foreground">{format(booking.checkOut, "MMM d, yyyy")}</p>
+                        <p>{format(booking.checkIn.toDate(), "MMM d, yyyy")}</p>
+                        <p className="text-muted-foreground">{format(booking.checkOut.toDate(), "MMM d, yyyy")}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={booking.status} />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {format(booking.createdAt, "MMM d, yyyy")}
+                      {format(booking.createdAt.toDate(), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => openDetailModal(booking)}>
@@ -189,23 +208,23 @@ const AdminBookings = () => {
                 <dl className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Residence</dt>
-                    <dd>{getResidenceById(selectedBooking.residenceId)?.name}</dd>
+                    <dd>{residences.find((r) => r.id === selectedBooking.residenceId)?.name || "Unknown"}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Room Type</dt>
-                    <dd>{getRoomTypeById(selectedBooking.roomTypeId)?.name}</dd>
+                    <dd>{roomTypes.find((rt) => rt.id === selectedBooking.roomTypeId)?.name || "Not specified"}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Check-in</dt>
-                    <dd>{format(selectedBooking.checkIn, "MMMM d, yyyy")}</dd>
+                    <dd>{format(selectedBooking.checkIn.toDate(), "MMMM d, yyyy")}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Check-out</dt>
-                    <dd>{format(selectedBooking.checkOut, "MMMM d, yyyy")}</dd>
+                    <dd>{format(selectedBooking.checkOut.toDate(), "MMMM d, yyyy")}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Duration</dt>
-                    <dd>{differenceInMonths(selectedBooking.checkOut, selectedBooking.checkIn)} months</dd>
+                    <dd>{differenceInMonths(selectedBooking.checkOut.toDate(), selectedBooking.checkIn.toDate())} months</dd>
                   </div>
                 </dl>
               </div>
@@ -226,10 +245,14 @@ const AdminBookings = () => {
                   variant="outline"
                   onClick={() => openConfirmDialog(selectedBooking, "reject")}
                   className="text-destructive"
+                  disabled={updateBookingStatus.isPending}
                 >
                   Reject
                 </Button>
-                <Button onClick={() => openConfirmDialog(selectedBooking, "approve")}>
+                <Button
+                  onClick={() => openConfirmDialog(selectedBooking, "approve")}
+                  disabled={updateBookingStatus.isPending}
+                >
                   Approve
                 </Button>
               </>
@@ -255,12 +278,20 @@ const AdminBookings = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={updateBookingStatus.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleStatusChange}
+              disabled={updateBookingStatus.isPending}
               className={actionType === "reject" ? "bg-destructive hover:bg-destructive/90" : ""}
             >
-              {actionType === "approve" ? "Approve" : "Reject"}
+              {updateBookingStatus.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {actionType === "approve" ? "Approving..." : "Rejecting..."}
+                </>
+              ) : (
+                actionType === "approve" ? "Approve" : "Reject"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

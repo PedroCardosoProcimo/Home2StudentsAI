@@ -4,9 +4,17 @@ import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 
 export const AdminLayout = () => {
-  const { user } = useAdminAuth();
+  const { user, isLoading } = useAdminAuth();
 
-  if (!user?.isAuthenticated) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
     return <Navigate to="/admin/login" replace />;
   }
 

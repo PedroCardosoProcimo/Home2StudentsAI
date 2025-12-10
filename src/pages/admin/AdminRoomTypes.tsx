@@ -8,14 +8,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
-import { roomTypes as initialRoomTypes, residences, getResidenceById } from "@/data/mockData";
+import { Plus, Pencil, Trash2, Users, Loader2 } from "lucide-react";
 import { RoomType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminRoomTypes, useCreateRoomType, useUpdateRoomType, useDeleteRoomType } from "@/hooks/admin/useAdminRoomTypes";
+import { useAdminResidences } from "@/hooks/admin/useAdminResidences";
 
 const AdminRoomTypes = () => {
   const { toast } = useToast();
-  const [roomTypes, setRoomTypes] = useState<RoomType[]>(initialRoomTypes);
+  const { data: roomTypes = [], isLoading: roomTypesLoading } = useAdminRoomTypes();
+  const { data: residences = [], isLoading: residencesLoading } = useAdminResidences();
+  const createRoomType = useCreateRoomType();
+  const updateRoomType = useUpdateRoomType();
+  const deleteRoomType = useDeleteRoomType();
+
   const [filterResidence, setFilterResidence] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -55,36 +61,56 @@ const AdminRoomTypes = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.residenceId || !formData.name || !formData.description || !formData.basePrice) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
       return;
     }
 
-    if (selectedRoomType) {
-      setRoomTypes((prev) =>
-        prev.map((r) => (r.id === selectedRoomType.id ? { ...r, ...formData } as RoomType : r))
-      );
-      toast({ title: "Success", description: "Room type updated successfully" });
-    } else {
-      const newRoomType: RoomType = {
-        ...formData as RoomType,
-        id: `room-${Date.now()}`,
-      };
-      setRoomTypes((prev) => [...prev, newRoomType]);
-      toast({ title: "Success", description: "Room type added successfully" });
+    try {
+      if (selectedRoomType) {
+        await updateRoomType.mutateAsync({
+          id: selectedRoomType.id,
+          ...formData,
+        });
+        toast({ title: "Success", description: "Room type updated successfully" });
+      } else {
+        await createRoomType.mutateAsync(formData as Omit<RoomType, 'id' | 'createdAt' | 'updatedAt'>);
+        toast({ title: "Success", description: "Room type added successfully" });
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to save room type. Please try again.",
+        variant: "destructive"
+      });
     }
-
-    setIsModalOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedRoomType) {
-      setRoomTypes((prev) => prev.filter((r) => r.id !== selectedRoomType.id));
-      toast({ title: "Success", description: "Room type deleted successfully" });
+      try {
+        await deleteRoomType.mutateAsync(selectedRoomType.id);
+        toast({ title: "Success", description: "Room type deleted successfully" });
+        setIsDeleteDialogOpen(false);
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to delete room type. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
-    setIsDeleteDialogOpen(false);
   };
+
+  if (roomTypesLoading || residencesLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -120,7 +146,7 @@ const AdminRoomTypes = () => {
             </TableHeader>
             <TableBody>
               {filteredRoomTypes.map((roomType) => {
-                const residence = getResidenceById(roomType.residenceId);
+                const residence = residences.find((r) => r.id === roomType.residenceId);
                 return (
                   <TableRow key={roomType.id}>
                     <TableCell className="font-medium">{roomType.name}</TableCell>
@@ -222,8 +248,19 @@ const AdminRoomTypes = () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={createRoomType.isPending || updateRoomType.isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={createRoomType.isPending || updateRoomType.isPending}>
+              {(createRoomType.isPending || updateRoomType.isPending) ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -238,9 +275,16 @@ const AdminRoomTypes = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogCancel disabled={deleteRoomType.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleteRoomType.isPending} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleteRoomType.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
