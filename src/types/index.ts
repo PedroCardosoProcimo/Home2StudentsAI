@@ -1,3 +1,6 @@
+import { Timestamp } from 'firebase/firestore';
+
+// Firestore types (with Timestamp)
 export interface Residence {
   id: string;
   name: string;
@@ -10,8 +13,8 @@ export interface Residence {
   active: boolean;
   startingPrice: number;
   minStay: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface RoomType {
@@ -21,11 +24,36 @@ export interface RoomType {
   description: string;
   basePrice: number;
   maxOccupancy: number;
+  imageUrl?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
+export interface Booking {
+  id: string;
+  residenceId: string;
+  roomTypeId?: string;
+  checkIn: Timestamp;
+  checkOut: Timestamp;
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+  notes?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface Settings {
+  minimumStayMonths: 1 | 6 | 10;
+  updatedAt: Timestamp;
+  updatedBy: string;
+}
+
+// Form types (with Date objects for easier form handling)
 export interface BookingFormData {
   residenceId: string;
-  roomTypeId: string;
+  roomTypeId?: string;
   checkIn: Date | undefined;
   checkOut: Date | undefined;
   guestName: string;
@@ -33,26 +61,6 @@ export interface BookingFormData {
   guestPhone: string;
   notes?: string;
   termsAccepted: boolean;
-}
-
-export interface Booking {
-  id: string;
-  residenceId: string;
-  roomTypeId: string;
-  checkIn: Date;
-  checkOut: Date;
-  guestName: string;
-  guestEmail: string;
-  guestPhone: string;
-  notes?: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: Date;
-}
-
-export interface Settings {
-  minimumStayMonths: 1 | 6 | 10;
-  updatedAt: Date;
-  updatedBy: string;
 }
 
 export interface Feature {
