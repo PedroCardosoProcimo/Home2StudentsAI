@@ -12,17 +12,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Plus, Search, Pencil, Trash2, Loader2 } from "lucide-react";
-import { cities, amenitiesList } from "@/data/mockData";
+import { useConfig } from "@/hooks/useConfig";
 import { Residence } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminResidences, useCreateResidence, useUpdateResidence, useDeleteResidence } from "@/hooks/admin/useAdminResidences";
 
 const AdminResidences = () => {
   const { toast } = useToast();
-  const { data: residences = [], isLoading } = useAdminResidences();
+  const { data: residences = [], isLoading: residencesLoading } = useAdminResidences();
+  const { data: config, isLoading: configLoading } = useConfig();
   const createResidence = useCreateResidence();
   const updateResidence = useUpdateResidence();
   const deleteResidence = useDeleteResidence();
+
+  const isLoading = residencesLoading || configLoading;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -226,7 +229,7 @@ const AdminResidences = () => {
                     <SelectValue placeholder="Select city" />
                   </SelectTrigger>
                   <SelectContent>
-                    {cities.map((city) => (
+                    {config?.cities.map((city) => (
                       <SelectItem key={city} value={city}>{city}</SelectItem>
                     ))}
                   </SelectContent>
@@ -287,14 +290,14 @@ const AdminResidences = () => {
             <div className="space-y-2">
               <Label>Amenities</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {amenitiesList.map((amenity) => (
-                  <div key={amenity} className="flex items-center space-x-2">
+                {config?.amenities.map((amenity) => (
+                  <div key={amenity.name} className="flex items-center space-x-2">
                     <Checkbox
-                      id={amenity}
-                      checked={formData.amenities?.includes(amenity)}
-                      onCheckedChange={() => toggleAmenity(amenity)}
+                      id={amenity.name}
+                      checked={formData.amenities?.includes(amenity.name)}
+                      onCheckedChange={() => toggleAmenity(amenity.name)}
                     />
-                    <label htmlFor={amenity} className="text-sm">{amenity}</label>
+                    <label htmlFor={amenity.name} className="text-sm">{amenity.name}</label>
                   </div>
                 ))}
               </div>

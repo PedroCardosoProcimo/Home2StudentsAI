@@ -1,5 +1,5 @@
-import { MapPin, Sparkles, Users, Calendar } from "lucide-react";
-import { features } from "@/data/mockData";
+import { MapPin, Sparkles, Users, Calendar, Loader2 } from "lucide-react";
+import { useConfig } from "@/hooks/useConfig";
 
 const iconMap: { [key: string]: React.ElementType } = {
   MapPin,
@@ -9,6 +9,18 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 export function FeaturesSection() {
+  const { data: config, isLoading } = useConfig();
+
+  if (isLoading) {
+    return (
+      <section className="section-padding bg-muted">
+        <div className="container-narrow flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="section-padding bg-muted">
       <div className="container-narrow">
@@ -23,7 +35,7 @@ export function FeaturesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {features.map((feature, index) => {
+          {config?.features.map((feature, index) => {
             const Icon = iconMap[feature.icon];
             return (
               <div

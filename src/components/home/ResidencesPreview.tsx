@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResidenceCard } from "@/components/residences/ResidenceCard";
-import { getActiveResidences } from "@/data/mockData";
+import { useResidences } from "@/hooks/useResidences";
 
 export function ResidencesPreview() {
-  const residences = getActiveResidences().slice(0, 3);
+  const { data: residences = [], isLoading } = useResidences(true);
+  const previewResidences = residences.slice(0, 3);
 
   return (
     <section className="section-padding">
@@ -21,13 +22,21 @@ export function ResidencesPreview() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {residences.map((residence, index) => (
-            <ResidenceCard
-              key={residence.id}
-              residence={residence}
-              index={index}
-            />
-          ))}
+          {isLoading ? (
+            <div className="col-span-full flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <>
+              {previewResidences.map((residence, index) => (
+                <ResidenceCard
+                  key={residence.id}
+                  residence={residence}
+                  index={index}
+                />
+              ))}
+            </>
+          )}
         </div>
 
         <div className="mt-12 text-center">

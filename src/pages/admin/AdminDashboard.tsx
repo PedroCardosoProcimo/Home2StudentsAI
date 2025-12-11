@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Building2, BedDouble, CalendarCheck, Clock, Plus, ArrowRight } from "lucide-react";
+import { Building2, BedDouble, CalendarCheck, Clock, Plus, ArrowRight, Loader2 } from "lucide-react";
 import { useAdminResidences } from "@/hooks/admin/useAdminResidences";
 import { useAdminRoomTypes } from "@/hooks/admin/useAdminRoomTypes";
 import { useAdminBookings } from "@/hooks/admin/useAdminBookings";
@@ -63,8 +63,8 @@ const AdminDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <p className="text-muted-foreground">Loading dashboard data...</p>
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

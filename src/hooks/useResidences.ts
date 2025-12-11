@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Residence } from '@/types';
 
@@ -9,14 +9,17 @@ export const useResidences = (activeOnly = true) => {
     queryFn: async () => {
       const residencesRef = collection(db, 'residences');
       const q = activeOnly
-        ? query(residencesRef, where('active', '==', true), orderBy('name'))
-        : query(residencesRef, orderBy('name'));
+        ? query(residencesRef, where('active', '==', true))
+        : query(residencesRef);
 
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
+      const residences = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Residence[];
+
+      // Sort in memory instead of in the query to avoid index requirement
+      return residences.sort((a, b) => a.name.localeCompare(b.name));
     }
   });
 };
