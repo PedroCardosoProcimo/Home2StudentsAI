@@ -1,73 +1,163 @@
-# Welcome to your Lovable project
+# Documentação Home2Students
 
-## Project info
+## 📋 Pré-requisitos
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Antes de começar, certifique-se de ter instalado:
+- [Node.js](https://nodejs.org/) (versão 16 ou superior)
+- [npm](https://www.npmjs.com/) (geralmente vem com Node.js)
 
-## How can I edit this code?
+## 🚀 Como Correr o Projeto
 
-There are several ways of editing your application.
+### 1. Instalar Dependências
 
-**Use Lovable**
+Abra o terminal na pasta do projeto e execute:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+```bash
+npm install
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+### 2. Configurar Variáveis de Ambiente
 
-**Use your preferred IDE**
+O projeto utiliza Firebase. Configure as variáveis de ambiente:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. Copie o ficheiro de exemplo:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. Edite o ficheiro `.env.local` e preencha com as suas credenciais do Firebase:
+   ```
+   VITE_FIREBASE_API_KEY=sua_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=seu_auth_domain
+   VITE_FIREBASE_PROJECT_ID=seu_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=seu_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=seu_sender_id
+   VITE_FIREBASE_APP_ID=seu_app_id
+   ```
 
-Follow these steps:
+### 3. Iniciar o Servidor de Desenvolvimento
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O projeto estará disponível em [http://localhost:3000](http://localhost:3000) (a porta pode variar).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 4. Build para Produção (Opcional)
 
-**Use GitHub Codespaces**
+Para criar uma versão otimizada para produção:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm run build
+```
 
-## What technologies are used for this project?
+Para pré-visualizar o build:
 
-This project is built with:
+```bash
+npm run preview
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🧪 Como Testar o Booking Flow
 
-## How can I deploy this project?
+O fluxo de reserva permite aos utilizadores submeter pedidos de reserva para residências estudantis.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Acesso ao Formulário de Reserva
 
-## Can I connect a custom domain to my Lovable project?
+**Opção 1: Através da Homepage**
+1. Aceda à página inicial: [http://localhost:3000](http://localhost:3000)
+2. Navegue pela lista de residências
+3. Clique em "Book Now" ou "Ver Detalhes" numa residência
+4. Será redirecionado para o formulário de reserva
 
-Yes, you can!
+**Opção 2: Acesso Direto**
+- Aceda diretamente a: [http://localhost:3000/book](http://localhost:3000/book)
+- Ou com residência pré-selecionada: [http://localhost:3000/book?residence=ID_DA_RESIDENCIA](http://localhost:3000/book?residence=ID_DA_RESIDENCIA)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Passo a Passo do Formulário
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+#### 1️⃣ Selecionar Estadia
+- **Residência**: Escolha a residência desejada (obrigatório)
+- **Tipo de Quarto**: Selecione o tipo de quarto disponível - aparece após escolher residência (obrigatório)
+- **Data de Check-in**: Selecione a data de entrada - mínimo hoje (obrigatório)
+- **Data de Check-out**: Selecione a data de saída - respeita estadia mínima configurada (obrigatório)
+
+> **Nota**: O sistema aplica automaticamente a estadia mínima (normalmente 1 mês). A data de check-out é ajustada automaticamente ao selecionar o check-in.
+
+#### 2️⃣ Informações Pessoais
+Preencha os seus dados de contacto:
+- **Nome Completo**: Nome do hóspede (obrigatório)
+- **Email**: Endereço de email válido (obrigatório)
+- **Número de Telefone**: Contacto telefónico (obrigatório)
+- **Mensagem/Notas**: Pedidos especiais ou questões (opcional)
+
+#### 3️⃣ Termos e Condições
+- Leia e aceite os **Termos & Condições** e **Política de Privacidade** (obrigatório)
+
+#### 4️⃣ Submeter Pedido
+- Clique no botão **"Submit Booking Request"**
+- Aguarde o processamento (botão mostra "Submitting...")
+
+### Resultado da Submissão
+
+**Sucesso:**
+- Será exibida uma página de confirmação com:
+  - Ícone de sucesso (✓)
+  - Mensagem de agradecimento
+  - **Referência da Reserva** (primeiros 8 caracteres do ID em maiúsculas)
+  - Informação sobre o prazo de resposta (24 horas)
+  - Botão para voltar à homepage
+
+**Erro:**
+- Será exibida uma notificação de erro
+- O formulário mantém-se preenchido para nova tentativa
+
+### Validações Implementadas
+
+O sistema valida automaticamente:
+- ✅ Todos os campos obrigatórios preenchidos
+- ✅ Formato de email válido
+- ✅ Datas de check-in/check-out selecionadas
+- ✅ Respeito pela estadia mínima
+- ✅ Check-in não pode ser no passado
+- ✅ Aceitação dos termos e condições
+
+### Estado da Reserva
+
+Após submissão, a reserva é guardada no Firebase Firestore com status **"pending"** e pode ser gerida através do painel administrativo em:
+- [http://localhost:3000/admin/bookings](http://localhost:3000/admin/bookings)
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Vite**: Build tool
+- **TypeScript**: Linguagem
+- **React**: Framework UI
+- **React Router**: Navegação
+- **shadcn/ui**: Componentes UI
+- **Tailwind CSS**: Estilização
+- **Firebase**: Backend (Firestore, Auth, Storage)
+- **React Hook Form**: Gestão de formulários
+- **Zod**: Validação de dados
+- **date-fns**: Manipulação de datas
+
+## 📝 Notas Adicionais
+
+- O projeto está configurado com ESLint para manter a qualidade do código
+- Utilize `npm run lint` para verificar problemas de código
+- O tema suporta modo claro/escuro (se configurado)
+- Todas as datas são manipuladas com a biblioteca `date-fns`
+
+## 🆘 Problemas Comuns
+
+**Erro ao iniciar o projeto:**
+- Verifique se o Node.js está instalado: `node --version`
+- Limpe a cache do npm: `npm cache clean --force`
+- Reinstale as dependências: `rm -rf node_modules package-lock.json && npm install`
+
+**Erro no formulário de reserva:**
+- Verifique se o Firebase está configurado corretamente no `.env.local`
+- Confirme que as coleções do Firestore existem (residences, roomTypes, bookings)
+- Verifique a consola do browser para erros específicos
+
+---
+
+**Desenvolvido por Home2Students** 🏠

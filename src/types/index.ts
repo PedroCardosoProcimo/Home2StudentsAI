@@ -12,7 +12,6 @@ export interface Residence {
   amenities: string[];
   active: boolean;
   startingPrice: number;
-  minStay: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

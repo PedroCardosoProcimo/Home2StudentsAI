@@ -68,7 +68,7 @@ const Book = () => {
     [residences, formData.residenceId]
   );
 
-  const minStay = settings?.minimumStayMonths || selectedResidence?.minStay || 1;
+  const minStay = settings?.minimumStayMonths || 1;
 
   useEffect(() => {
     // Reset room type when residence changes

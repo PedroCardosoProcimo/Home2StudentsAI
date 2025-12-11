@@ -41,7 +41,6 @@ const AdminResidences = () => {
     amenities: [],
     active: true,
     startingPrice: 0,
-    minStay: 1,
   });
 
   const filteredResidences = residences.filter(
@@ -62,7 +61,6 @@ const AdminResidences = () => {
       amenities: [],
       active: true,
       startingPrice: 0,
-      minStay: 1,
     });
     setIsModalOpen(true);
   };
@@ -266,25 +264,14 @@ const AdminResidences = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startingPrice">Starting Price (€/month)</Label>
-                <Input
-                  id="startingPrice"
-                  type="number"
-                  value={formData.startingPrice || ""}
-                  onChange={(e) => setFormData({ ...formData, startingPrice: Number(e.target.value) })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="minStay">Minimum Stay (months)</Label>
-                <Input
-                  id="minStay"
-                  type="number"
-                  value={formData.minStay || ""}
-                  onChange={(e) => setFormData({ ...formData, minStay: Number(e.target.value) })}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="startingPrice">Starting Price (€/month)</Label>
+              <Input
+                id="startingPrice"
+                type="number"
+                value={formData.startingPrice || ""}
+                onChange={(e) => setFormData({ ...formData, startingPrice: Number(e.target.value) })}
+              />
             </div>
 
             <div className="space-y-2">
