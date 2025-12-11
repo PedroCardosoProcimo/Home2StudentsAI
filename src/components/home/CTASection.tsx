@@ -9,7 +9,7 @@ export function CTASection() {
           Ready to Find Your New Home?
         </h2>
         <p className="mt-4 text-primary-foreground/80 max-w-xl mx-auto">
-          Join thousands of students who have already made Nine Living their
+          Join thousands of students who have already made HOME2STUDENTS their
           home in Portugal.
         </p>
         <div className="mt-8">

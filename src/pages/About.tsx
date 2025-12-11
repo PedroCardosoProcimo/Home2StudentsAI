@@ -33,11 +33,11 @@ const About = () => {
           {/* Header */}
           <div className="max-w-3xl">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-foreground">
-              About Nine Living
+              About HOME2STUDENTS
             </h1>
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
               We're on a mission to make student accommodation simple, comfortable,
-              and community-focused. Founded in 2020, Nine Living has grown to become
+              and community-focused. Founded in 2020, HOME2STUDENTS has grown to become
               Portugal's leading student housing provider.
             </p>
           </div>
@@ -56,7 +56,7 @@ const About = () => {
                 Our Story
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Nine Living was born from a simple observation: finding quality student
+                HOME2STUDENTS was born from a simple observation: finding quality student
                 accommodation in Portugal was unnecessarily complicated. As former
                 international students ourselves, we experienced firsthand the
                 challenges of securing safe, affordable, and well-located housing.

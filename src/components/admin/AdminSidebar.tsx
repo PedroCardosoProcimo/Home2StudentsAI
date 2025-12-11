@@ -37,7 +37,7 @@ export const AdminSidebar = () => {
   const SidebarContent = () => (
     <>
       <div className="p-6 border-b border-primary-foreground/10">
-        <h1 className="text-xl font-bold text-primary-foreground">NINE Admin</h1>
+        <h1 className="text-xl font-bold text-primary-foreground">HOME2STUDENTS Admin</h1>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">

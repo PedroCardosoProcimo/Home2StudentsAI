@@ -42,7 +42,7 @@ export function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <span className="text-2xl md:text-3xl font-heading font-bold text-primary tracking-tight">
-              NINE
+              HOME2STUDENTS
             </span>
           </Link>
 

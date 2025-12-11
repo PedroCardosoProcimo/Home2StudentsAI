@@ -14,7 +14,7 @@ export function FeaturesSection() {
       <div className="container-narrow">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
-            Why Choose Nine Living
+            Why Choose HOME2STUDENTS
           </h2>
           <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
             We've thought of everything so you can focus on what matters most -

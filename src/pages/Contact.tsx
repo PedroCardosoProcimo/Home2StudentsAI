@@ -120,10 +120,10 @@ const Contact = () => {
                       Email Us
                     </h3>
                     <a
-                      href="mailto:hello@nineliving.pt"
+                      href="mailto:hello@home2students.pt"
                       className="text-muted-foreground hover:text-secondary transition-colors"
                     >
-                      hello@nineliving.pt
+                      hello@home2students.pt
                     </a>
                   </div>
                 </div>

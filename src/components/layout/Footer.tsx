@@ -29,7 +29,7 @@ export function Footer() {
           <div className="lg:col-span-1">
             <Link to="/" className="inline-block">
               <span className="text-3xl font-heading font-bold tracking-tight">
-                NINE
+                HOME2STUDENTS
               </span>
             </Link>
             <p className="mt-4 text-primary-foreground/80 text-sm leading-relaxed">
@@ -114,10 +114,10 @@ export function Footer() {
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-secondary flex-shrink-0" />
                 <a
-                  href="mailto:hello@nineliving.pt"
+                  href="mailto:hello@home2students.pt"
                   className="text-primary-foreground/80 hover:text-secondary transition-colors text-sm"
                 >
-                  hello@nineliving.pt
+                  hello@home2students.pt
                 </a>
               </li>
             </ul>
@@ -129,7 +129,7 @@ export function Footer() {
       <div className="border-t border-primary-foreground/10">
         <div className="container-narrow py-6">
           <p className="text-center text-primary-foreground/60 text-sm">
-            © {new Date().getFullYear()} Nine Student Living. All rights
+            © {new Date().getFullYear()} HOME2STUDENTS. All rights
             reserved.
           </p>
         </div>

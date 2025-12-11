@@ -51,7 +51,7 @@ const AdminLogin = () => {
     <div className="min-h-screen bg-muted flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center pb-2">
-          <h1 className="text-2xl font-bold text-primary">NINE Admin</h1>
+          <h1 className="text-2xl font-bold text-primary">HOME2STUDENTS Admin</h1>
           <p className="text-muted-foreground text-sm mt-1">Sign in to your account</p>
         </CardHeader>
         <CardContent>
@@ -61,7 +61,7 @@ const AdminLogin = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@nineliving.pt"
+                placeholder="admin@home2students.pt"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={submitting}
@@ -98,7 +98,7 @@ const AdminLogin = () => {
             </Button>
 
             <p className="text-xs text-muted-foreground text-center mt-4">
-              Demo: admin@nineliving.pt / admin123
+              Demo: admin@home2students.pt / admin123
             </p>
           </form>
         </CardContent>
