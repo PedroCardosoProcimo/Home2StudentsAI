@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { MapPin, ArrowRight } from "lucide-react";
 import { Residence } from "@/types";
 import { Button } from "@/components/ui/button";
-import { useSettings } from "@/hooks/useSettings";
 
 interface ResidenceCardProps {
   residence: Residence;
@@ -10,7 +9,6 @@ interface ResidenceCardProps {
 }
 
 export function ResidenceCard({ residence, index = 0 }: ResidenceCardProps) {
-  const { data: settings } = useSettings();
 
   return (
     <div
@@ -67,9 +65,6 @@ export function ResidenceCard({ residence, index = 0 }: ResidenceCardProps) {
               <span className="text-sm font-normal text-muted-foreground">
                 /month
               </span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Min. {settings?.minimumStayMonths || 1} month{(settings?.minimumStayMonths || 1) > 1 ? 's' : ''}
             </p>
           </div>
           <Button asChild variant="ghost" size="sm" className="group/btn">

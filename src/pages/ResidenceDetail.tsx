@@ -11,7 +11,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useResidence } from "@/hooks/useResidence";
-import { useSettings } from "@/hooks/useSettings";
 import { ResidenceCardSkeleton } from "@/components/residences/ResidenceCardSkeleton";
 
 const amenityIcons: { [key: string]: React.ElementType } = {
@@ -28,7 +27,6 @@ const ResidenceDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, isLoading, error } = useResidence(id);
-  const { data: settings } = useSettings();
 
   if (isLoading) {
     return (
@@ -211,7 +209,7 @@ const ResidenceDetail = () => {
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Minimum stay: {settings?.minimumStayMonths || 1} month{(settings?.minimumStayMonths || 1) > 1 ? 's' : ''}
+                  Minimum stay: {residence.minStay} month{residence.minStay > 1 ? 's' : ''}
                 </p>
                 <Button
                   variant="coral"
