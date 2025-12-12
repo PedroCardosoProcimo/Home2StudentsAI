@@ -32,6 +32,8 @@ const AdminRoomTypes = () => {
     description: "",
     basePrice: 0,
     maxOccupancy: 1,
+    area: 0,
+    floorPlanUrl: "",
   });
 
   const filteredRoomTypes = filterResidence === "all"
@@ -46,6 +48,8 @@ const AdminRoomTypes = () => {
       description: "",
       basePrice: 0,
       maxOccupancy: 1,
+      area: 0,
+      floorPlanUrl: "",
     });
     setIsModalOpen(true);
   };
@@ -62,8 +66,29 @@ const AdminRoomTypes = () => {
   };
 
   const handleSave = async () => {
+    // Validate required fields
     if (!formData.residenceId || !formData.name || !formData.description || !formData.basePrice) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
+
+    // Validate area (must be positive number)
+    if (!formData.area || formData.area <= 0) {
+      toast({ title: "Error", description: "Please enter a valid area (m²) greater than 0", variant: "destructive" });
+      return;
+    }
+
+    // Validate floor plan URL
+    if (!formData.floorPlanUrl || !formData.floorPlanUrl.trim()) {
+      toast({ title: "Error", description: "Please enter a floor plan URL", variant: "destructive" });
+      return;
+    }
+
+    // Basic URL validation
+    try {
+      new URL(formData.floorPlanUrl);
+    } catch {
+      toast({ title: "Error", description: "Please enter a valid URL for the floor plan", variant: "destructive" });
       return;
     }
 
@@ -243,6 +268,31 @@ const AdminRoomTypes = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="area">Area (m²) *</Label>
+                <Input
+                  id="area"
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  value={formData.area || ""}
+                  onChange={(e) => setFormData({ ...formData, area: Number(e.target.value) })}
+                  placeholder="e.g., 25.5"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="floorPlanUrl">Floor Plan URL *</Label>
+                <Input
+                  id="floorPlanUrl"
+                  type="url"
+                  value={formData.floorPlanUrl || ""}
+                  onChange={(e) => setFormData({ ...formData, floorPlanUrl: e.target.value })}
+                  placeholder="https://..."
+                />
               </div>
             </div>
           </div>

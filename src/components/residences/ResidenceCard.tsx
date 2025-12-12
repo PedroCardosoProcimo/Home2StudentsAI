@@ -61,10 +61,18 @@ export function ResidenceCard({ residence, index = 0 }: ResidenceCardProps) {
           <div>
             <span className="text-xs text-muted-foreground">From</span>
             <p className="text-xl font-heading font-bold text-foreground">
-              €{residence.startingPrice}
-              <span className="text-sm font-normal text-muted-foreground">
-                /month
-              </span>
+              {residence.startingPrice !== null && residence.startingPrice !== undefined ? (
+                <>
+                  €{residence.startingPrice}
+                  <span className="text-sm font-normal text-muted-foreground">
+                    /month
+                  </span>
+                </>
+              ) : (
+                <span className="text-base font-normal text-muted-foreground">
+                  Price on request
+                </span>
+              )}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Min. {residence?.minStay || 1} month{(residence?.minStay || 1) > 1 ? 's' : ''}

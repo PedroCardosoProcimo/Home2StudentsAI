@@ -39,12 +39,13 @@ import { toast } from "@/hooks/use-toast";
 const Book = () => {
   const [searchParams] = useSearchParams();
   const preselectedResidence = searchParams.get("residence");
+  const preselectedRoomType = searchParams.get("roomType");
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [bookingId, setBookingId] = useState<string>("");
   const [formData, setFormData] = useState<BookingFormData>({
     residenceId: preselectedResidence || "",
-    roomTypeId: "",
+    roomTypeId: preselectedRoomType || "",
     checkIn: undefined,
     checkOut: undefined,
     guestName: "",
@@ -69,17 +70,43 @@ const Book = () => {
   const minStay = selectedResidence?.minStay || 1;
 
   useEffect(() => {
-    // Reset room type when residence changes
-    if (formData.residenceId) {
-      setFormData((prev) => ({ ...prev, roomTypeId: "" }));
+    // Pre-select room type if provided in URL
+    if (preselectedRoomType && preselectedResidence) {
+      setFormData((prev) => ({
+        ...prev,
+        residenceId: preselectedResidence,
+        roomTypeId: preselectedRoomType,
+      }));
     }
-  }, [formData.residenceId]);
+  }, [preselectedRoomType, preselectedResidence]);
+
+  useEffect(() => {
+    // Reset room type when residence changes
+    // If room type was preselected from URL, only clear it if residence was manually changed
+    if (formData.residenceId) {
+      const shouldClearRoomType = 
+        !preselectedRoomType ||
+        (preselectedResidence && formData.residenceId !== preselectedResidence); // Residence was manually changed
+      
+      if (shouldClearRoomType) {
+        setFormData((prev) => ({ ...prev, roomTypeId: "" }));
+      }
+    }
+  }, [formData.residenceId, preselectedRoomType, preselectedResidence]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof BookingFormData, string>> = {};
 
     if (!formData.residenceId) newErrors.residenceId = "Please select a residence";
-    if (!formData.roomTypeId) newErrors.roomTypeId = "Please select a room type";
+    if (!formData.roomTypeId) {
+      newErrors.roomTypeId = "Please select a room type";
+    } else {
+      // Validate that the selected room type belongs to the selected residence
+      const selectedRoomType = roomTypes.find(rt => rt.id === formData.roomTypeId);
+      if (!selectedRoomType) {
+        newErrors.roomTypeId = "Selected room type does not belong to the selected residence";
+      }
+    }
     if (!formData.checkIn) newErrors.checkIn = "Please select a check-in date";
     if (!formData.checkOut) newErrors.checkOut = "Please select a check-out date";
     if (!formData.guestName.trim()) newErrors.guestName = "Name is required";
@@ -196,9 +223,16 @@ const Book = () => {
                       onValueChange={(value) =>
                         setFormData((prev) => ({ ...prev, residenceId: value }))
                       }
+                      disabled={!!preselectedResidence && !!preselectedRoomType}
                     >
                       <SelectTrigger className={cn(errors.residenceId && "border-destructive")}>
-                        <SelectValue placeholder="Select a residence" />
+                        <SelectValue 
+                          placeholder={
+                            preselectedResidence && preselectedRoomType
+                              ? "Residence pre-selected"
+                              : "Select a residence"
+                          } 
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {residences.map((r) => (
@@ -208,6 +242,11 @@ const Book = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {preselectedResidence && preselectedRoomType && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Residence pre-selected from room detail page
+                      </p>
+                    )}
                     {errors.residenceId && (
                       <p className="text-sm text-destructive mt-1">{errors.residenceId}</p>
                     )}
@@ -221,10 +260,18 @@ const Book = () => {
                       onValueChange={(value) =>
                         setFormData((prev) => ({ ...prev, roomTypeId: value }))
                       }
-                      disabled={!formData.residenceId}
+                      disabled={!formData.residenceId || !!preselectedRoomType}
                     >
                       <SelectTrigger className={cn(errors.roomTypeId && "border-destructive")}>
-                        <SelectValue placeholder={formData.residenceId ? "Select a room type" : "Select a residence first"} />
+                        <SelectValue 
+                          placeholder={
+                            preselectedRoomType 
+                              ? "Room type selected" 
+                              : formData.residenceId 
+                                ? "Select a room type" 
+                                : "Select a residence first"
+                          } 
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {roomTypes.map((r) => (
@@ -234,6 +281,11 @@ const Book = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {preselectedRoomType && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Room type pre-selected from room detail page
+                      </p>
+                    )}
                     {errors.roomTypeId && (
                       <p className="text-sm text-destructive mt-1">{errors.roomTypeId}</p>
                     )}

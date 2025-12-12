@@ -11,7 +11,7 @@ export interface Residence {
   imageUrl: string;
   amenities: string[];
   active: boolean;
-  startingPrice: number;
+  startingPrice: number | null;
   minStay: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -24,6 +24,8 @@ export interface RoomType {
   description: string;
   basePrice: number;
   maxOccupancy: number;
+  area: number;
+  floorPlanUrl: string;
   imageUrl?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;

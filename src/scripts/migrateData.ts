@@ -41,14 +41,6 @@ export const migrateData = async () => {
     }
     console.log('✓ Bookings migrated');
 
-    // Set initial settings
-    await setDoc(doc(db, 'settings', 'general'), {
-      minimumStayMonths: 1,
-      updatedAt: Timestamp.now(),
-      updatedBy: 'system'
-    });
-    console.log('✓ Settings initialized');
-
     console.log('Migration complete!');
   } catch (error) {
     console.error('Migration failed:', error);
