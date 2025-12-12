@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { MapPin, Users, Wifi, Dumbbell, Book, Home, Shirt, UtensilsCrossed, Wind, Flame, Armchair, Shield, PawPrint, Car, Music } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,11 @@ const ResidenceDetail = () => {
   // Support both :id and :residenceId for backward compatibility
   const residenceIdParam = id || residenceId;
   const { data, isLoading, error } = useResidence(residenceIdParam);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   if (isLoading) {
     return (
@@ -242,10 +248,16 @@ const ResidenceDetail = () => {
                     size="lg"
                     className="w-full"
                     onClick={() => {
-                      // Scroll to room types section
+                      // Scroll to room types section with offset for header
                       const roomTypesSection = document.getElementById('room-types');
                       if (roomTypesSection) {
-                        roomTypesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const headerOffset = 120;
+                        const elementPosition = roomTypesSection.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        window.scrollTo({
+                          top: offsetPosition,
+                          behavior: 'smooth'
+                        });
                       }
                     }}
                   >
