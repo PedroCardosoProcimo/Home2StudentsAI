@@ -9,6 +9,7 @@ import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import Index from "./pages/Index";
 import Residences from "./pages/Residences";
 import ResidenceDetail from "./pages/ResidenceDetail";
+import RoomDetail from "./pages/RoomDetail";
 import Book from "./pages/Book";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -36,6 +37,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/residences" element={<Residences />} />
+            <Route path="/residences/:id/rooms/:roomId" element={<RoomDetail />} />
             <Route path="/residences/:id" element={<ResidenceDetail />} />
             <Route path="/book" element={<Book />} />
             <Route path="/about" element={<About />} />

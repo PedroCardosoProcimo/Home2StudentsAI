@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { MapPin, Users, Wifi, Dumbbell, Book, Home, Shield, Bike, UtensilsCrossed } from "lucide-react";
+import { MapPin, Users, Wifi, Dumbbell, Book, Home, Shirt, UtensilsCrossed, Wind, Flame, Armchair, Shield, PawPrint, Car, Music } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,18 +15,25 @@ import { ResidenceCardSkeleton } from "@/components/residences/ResidenceCardSkel
 
 const amenityIcons: { [key: string]: React.ElementType } = {
   "High-Speed WiFi": Wifi,
+  "Kitchen": UtensilsCrossed,
   "Gym": Dumbbell,
-  "Study Rooms": Book,
-  "Library": Book,
-  "Common Kitchen": UtensilsCrossed,
+  "Study Room": Book,
+  "Laundry": Shirt,
+  "Air Conditioning": Wind,
+  "Heating": Flame,
+  "Furnished": Armchair,
   "24/7 Security": Shield,
-  "Bike Storage": Bike,
+  "Pet Friendly": PawPrint,
+  "Parking": Car,
+  "Music Room": Music,
 };
 
 const ResidenceDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, residenceId } = useParams<{ id?: string; residenceId?: string }>();
   const navigate = useNavigate();
-  const { data, isLoading, error } = useResidence(id);
+  // Support both :id and :residenceId for backward compatibility
+  const residenceIdParam = id || residenceId;
+  const { data, isLoading, error } = useResidence(residenceIdParam);
 
   if (isLoading) {
     return (
@@ -147,39 +154,49 @@ const ResidenceDetail = () => {
               </div>
 
               {/* Room Types */}
-              <div>
+              <div id="room-types">
                 <h2 className="text-xl font-heading font-semibold text-foreground mb-6">
                   Available Room Types
                 </h2>
                 <div className="space-y-4">
                   {roomTypes.map((room) => (
-                    <div
+                    <Link
                       key={room.id}
-                      className="p-5 bg-card border border-border rounded-xl hover:shadow-md transition-shadow"
+                      to={`/residences/${residence.id}/rooms/${room.id}`}
+                      className="block"
                     >
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-heading font-semibold text-foreground">
-                            {room.name}
-                          </h3>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {room.description}
-                          </p>
-                          <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                            <Users className="w-4 h-4" />
-                            <span>Max {room.maxOccupancy} {room.maxOccupancy === 1 ? 'person' : 'people'}</span>
+                      <div className="p-5 bg-card border border-border rounded-xl hover:shadow-md transition-shadow cursor-pointer group">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-heading font-semibold text-foreground group-hover:text-secondary transition-colors">
+                              {room.name}
+                            </h3>
+                            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                              {room.description}
+                            </p>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Users className="w-4 h-4" />
+                                <span>Max {room.maxOccupancy} {room.maxOccupancy === 1 ? 'person' : 'people'}</span>
+                              </div>
+                              <span>•</span>
+                              <span>{room.area} m²</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-heading font-bold text-foreground">
+                              €{room.basePrice}
+                              <span className="text-sm font-normal text-muted-foreground">
+                                /month
+                              </span>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1 group-hover:text-secondary transition-colors">
+                              View details →
+                            </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-heading font-bold text-foreground">
-                            €{room.basePrice}
-                            <span className="text-sm font-normal text-muted-foreground">
-                              /month
-                            </span>
-                          </p>
-                        </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -196,29 +213,45 @@ const ResidenceDetail = () => {
               </div>
             </div>
 
-            {/* Right Column - Booking Card */}
+            {/* Right Column - Info Card */}
             <div className="lg:col-span-1">
               <div className="sticky top-28 bg-card border border-border rounded-xl p-6 shadow-sm">
                 <div className="mb-6">
                   <span className="text-sm text-muted-foreground">From</span>
                   <p className="text-3xl font-heading font-bold text-foreground">
-                    €{residence.startingPrice}
-                    <span className="text-base font-normal text-muted-foreground">
-                      /month
-                    </span>
+                    {residence.startingPrice !== null && residence.startingPrice !== undefined ? (
+                      <>
+                        €{residence.startingPrice}
+                        <span className="text-base font-normal text-muted-foreground">
+                          /month
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-base font-normal text-muted-foreground">
+                        Price on request
+                      </span>
+                    )}
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground mb-6">
                   Minimum stay: {residence?.minStay || 1} month{(residence?.minStay || 1) > 1 ? 's' : ''}
                 </p>
-                <Button
-                  variant="coral"
-                  size="lg"
-                  className="w-full"
-                  onClick={() => navigate(`/book?residence=${residence.id}`)}
-                >
-                  Book This Residence
-                </Button>
+                {roomTypes.length > 0 && (
+                  <Button
+                    variant="coral"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => {
+                      // Scroll to room types section
+                      const roomTypesSection = document.getElementById('room-types');
+                      if (roomTypesSection) {
+                        roomTypesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }}
+                  >
+                    View Rooms to Book
+                  </Button>
+                )}
                 <p className="mt-4 text-xs text-muted-foreground text-center">
                   Free cancellation up to 30 days before check-in
                 </p>

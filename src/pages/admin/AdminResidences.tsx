@@ -18,6 +18,7 @@ import { Residence, RoomType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminResidences, useCreateResidence, useUpdateResidence, useDeleteResidence } from "@/hooks/admin/useAdminResidences";
 import { useAdminRoomTypes, useCreateRoomType, useUpdateRoomType, useDeleteRoomType } from "@/hooks/admin/useAdminRoomTypes";
+import { calculateMinimumPrice } from "@/lib/residenceUtils";
 
 // Temporary room type for form management
 interface TempRoomType {
@@ -27,6 +28,8 @@ interface TempRoomType {
   description: string;
   basePrice: number;
   maxOccupancy: number;
+  area: number;
+  floorPlanUrl: string;
 }
 
 const AdminResidences = () => {
@@ -56,7 +59,7 @@ const AdminResidences = () => {
     imageUrl: "",
     amenities: [],
     active: true,
-    startingPrice: 0,
+    startingPrice: null,
     minStay: 1,
   });
 
@@ -67,6 +70,8 @@ const AdminResidences = () => {
     description: "",
     basePrice: 0,
     maxOccupancy: 1,
+    area: 0,
+    floorPlanUrl: "",
   });
   const [editingRoomTypeId, setEditingRoomTypeId] = useState<string | null>(null);
 
@@ -82,6 +87,8 @@ const AdminResidences = () => {
           description: rt.description,
           basePrice: rt.basePrice,
           maxOccupancy: rt.maxOccupancy,
+          area: rt.area,
+          floorPlanUrl: rt.floorPlanUrl,
         }));
       setRoomTypes(residenceRoomTypes);
     }
@@ -104,7 +111,7 @@ const AdminResidences = () => {
       imageUrl: "",
       amenities: [],
       active: true,
-      startingPrice: 0,
+      startingPrice: null,
       minStay: 1,
     });
     setRoomTypes([]);
@@ -113,6 +120,8 @@ const AdminResidences = () => {
       description: "",
       basePrice: 0,
       maxOccupancy: 1,
+      area: 0,
+      floorPlanUrl: "",
     });
     setEditingRoomTypeId(null);
     setIsModalOpen(true);
@@ -126,6 +135,8 @@ const AdminResidences = () => {
       description: "",
       basePrice: 0,
       maxOccupancy: 1,
+      area: 0,
+      floorPlanUrl: "",
     });
     setEditingRoomTypeId(null);
     setIsModalOpen(true);
@@ -137,8 +148,29 @@ const AdminResidences = () => {
   };
 
   const handleAddRoomType = () => {
+    // Validate required fields
     if (!roomTypeFormData.name || !roomTypeFormData.description || !roomTypeFormData.basePrice) {
-      toast({ title: "Error", description: "Please fill in all room type fields", variant: "destructive" });
+      toast({ title: "Error", description: "Please fill in all required room type fields", variant: "destructive" });
+      return;
+    }
+
+    // Validate area (must be positive number)
+    if (!roomTypeFormData.area || roomTypeFormData.area <= 0) {
+      toast({ title: "Error", description: "Please enter a valid area (m²) greater than 0", variant: "destructive" });
+      return;
+    }
+
+    // Validate floor plan URL
+    if (!roomTypeFormData.floorPlanUrl || !roomTypeFormData.floorPlanUrl.trim()) {
+      toast({ title: "Error", description: "Please enter a floor plan URL", variant: "destructive" });
+      return;
+    }
+
+    // Basic URL validation
+    try {
+      new URL(roomTypeFormData.floorPlanUrl);
+    } catch {
+      toast({ title: "Error", description: "Please enter a valid URL for the floor plan", variant: "destructive" });
       return;
     }
 
@@ -153,6 +185,8 @@ const AdminResidences = () => {
                 description: roomTypeFormData.description!,
                 basePrice: roomTypeFormData.basePrice!,
                 maxOccupancy: roomTypeFormData.maxOccupancy!,
+                area: roomTypeFormData.area!,
+                floorPlanUrl: roomTypeFormData.floorPlanUrl!,
               }
             : rt
         )
@@ -166,6 +200,8 @@ const AdminResidences = () => {
         description: roomTypeFormData.description!,
         basePrice: roomTypeFormData.basePrice!,
         maxOccupancy: roomTypeFormData.maxOccupancy!,
+        area: roomTypeFormData.area!,
+        floorPlanUrl: roomTypeFormData.floorPlanUrl!,
       };
       setRoomTypes((prev) => [...prev, newRoomType]);
     }
@@ -176,6 +212,8 @@ const AdminResidences = () => {
       description: "",
       basePrice: 0,
       maxOccupancy: 1,
+      area: 0,
+      floorPlanUrl: "",
     });
   };
 
@@ -185,6 +223,8 @@ const AdminResidences = () => {
       description: roomType.description,
       basePrice: roomType.basePrice,
       maxOccupancy: roomType.maxOccupancy,
+      area: roomType.area,
+      floorPlanUrl: roomType.floorPlanUrl,
     });
     setEditingRoomTypeId(roomType.tempId);
   };
@@ -195,6 +235,8 @@ const AdminResidences = () => {
       description: "",
       basePrice: 0,
       maxOccupancy: 1,
+      area: 0,
+      floorPlanUrl: "",
     });
     setEditingRoomTypeId(null);
   };
@@ -227,10 +269,11 @@ const AdminResidences = () => {
       let residenceId: string;
 
       if (selectedResidence) {
-        // Edit existing residence
+        // Edit existing residence (exclude startingPrice as it's auto-calculated)
+        const { startingPrice, ...residenceUpdateData } = formData;
         await updateResidence.mutateAsync({
           id: selectedResidence.id,
-          ...formData,
+          ...residenceUpdateData,
         });
         residenceId = selectedResidence.id;
 
@@ -256,6 +299,8 @@ const AdminResidences = () => {
               description: rt.description,
               basePrice: rt.basePrice,
               maxOccupancy: rt.maxOccupancy,
+              area: rt.area,
+              floorPlanUrl: rt.floorPlanUrl,
               residenceId,
             });
           } else {
@@ -266,15 +311,18 @@ const AdminResidences = () => {
               description: rt.description,
               basePrice: rt.basePrice,
               maxOccupancy: rt.maxOccupancy,
+              area: rt.area,
+              floorPlanUrl: rt.floorPlanUrl,
             });
           }
         }
 
         toast({ title: "Success", description: "Residence updated successfully" });
       } else {
-        // Create new residence
+        // Create new residence (without startingPrice, it will be calculated from room types)
+        const { startingPrice, ...residenceData } = formData;
         residenceId = await createResidence.mutateAsync(
-          formData as Omit<Residence, "id" | "createdAt" | "updatedAt">
+          residenceData as Omit<Residence, "id" | "createdAt" | "updatedAt" | "startingPrice"> & { startingPrice: null }
         );
 
         // Create all room types
@@ -285,8 +333,17 @@ const AdminResidences = () => {
             description: rt.description,
             basePrice: rt.basePrice,
             maxOccupancy: rt.maxOccupancy,
+            area: rt.area,
+            floorPlanUrl: rt.floorPlanUrl,
           });
         }
+
+        // Calculate and update starting price (this is also done in createRoomType hooks, but we do it here for immediate update)
+        const minPrice = calculateMinimumPrice(roomTypes);
+        await updateResidence.mutateAsync({
+          id: residenceId,
+          startingPrice: minPrice,
+        });
 
         toast({ title: "Success", description: "Residence added successfully" });
       }
@@ -385,7 +442,11 @@ const AdminResidences = () => {
                   </TableCell>
                   <TableCell className="font-medium">{residence.name}</TableCell>
                   <TableCell>{residence.city}</TableCell>
-                  <TableCell>€{residence.startingPrice}/mo</TableCell>
+                  <TableCell>
+                    {residence.startingPrice !== null && residence.startingPrice !== undefined 
+                      ? `€${residence.startingPrice}/mo` 
+                      : "Price on request"}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge status={residence.active ? "active" : "inactive"} />
                   </TableCell>
@@ -488,13 +549,16 @@ const AdminResidences = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startingPrice">Starting Price (€/month) *</Label>
-                  <Input
-                    id="startingPrice"
-                    type="number"
-                    value={formData.startingPrice || ""}
-                    onChange={(e) => setFormData({ ...formData, startingPrice: Number(e.target.value) })}
-                  />
+                  <Label>Starting Price (€/month)</Label>
+                  <div className="flex items-center h-10 px-3 py-2 text-sm bg-muted rounded-md border border-border">
+                    {(() => {
+                      const calculatedPrice = calculateMinimumPrice(roomTypes);
+                      return calculatedPrice !== null ? `€${calculatedPrice}/month` : "Price on request (add room types)";
+                    })()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Automatically calculated from room types
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="minStay">Minimum Stay (months) *</Label>
@@ -608,6 +672,35 @@ const AdminResidences = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="area">Area (m²) *</Label>
+                        <Input
+                          id="area"
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          value={roomTypeFormData.area || ""}
+                          onChange={(e) =>
+                            setRoomTypeFormData({ ...roomTypeFormData, area: Number(e.target.value) })
+                          }
+                          placeholder="e.g., 25.5"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="floorPlanUrl">Floor Plan URL *</Label>
+                        <Input
+                          id="floorPlanUrl"
+                          type="url"
+                          value={roomTypeFormData.floorPlanUrl || ""}
+                          onChange={(e) =>
+                            setRoomTypeFormData({ ...roomTypeFormData, floorPlanUrl: e.target.value })
+                          }
+                          placeholder="https://..."
+                        />
+                      </div>
                     </div>
 
                     <div className="flex gap-2">
