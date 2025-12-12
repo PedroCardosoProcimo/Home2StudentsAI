@@ -67,7 +67,7 @@ export function ResidenceCard({ residence, index = 0 }: ResidenceCardProps) {
               </span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Min. {residence.minStay} month{residence.minStay > 1 ? 's' : ''}
+              Min. {residence?.minStay || 1} month{(residence?.minStay || 1) > 1 ? 's' : ''}
             </p>
           </div>
           <Button asChild variant="ghost" size="sm" className="group/btn">

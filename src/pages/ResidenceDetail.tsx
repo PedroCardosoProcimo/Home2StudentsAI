@@ -209,7 +209,7 @@ const ResidenceDetail = () => {
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Minimum stay: {residence.minStay} month{residence.minStay > 1 ? 's' : ''}
+                  Minimum stay: {residence?.minStay || 1} month{(residence?.minStay || 1) > 1 ? 's' : ''}
                 </p>
                 <Button
                   variant="coral"
