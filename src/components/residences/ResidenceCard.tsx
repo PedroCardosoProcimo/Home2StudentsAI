@@ -66,6 +66,9 @@ export function ResidenceCard({ residence, index = 0 }: ResidenceCardProps) {
                 /month
               </span>
             </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Min. {residence.minStay} month{residence.minStay > 1 ? 's' : ''}
+            </p>
           </div>
           <Button asChild variant="ghost" size="sm" className="group/btn">
             <Link to={`/residences/${residence.id}`}>

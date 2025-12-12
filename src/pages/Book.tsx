@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 import { useResidences } from "@/hooks/useResidences";
-import { useSettings } from "@/hooks/useSettings";
 import { useCreateBooking } from "@/hooks/useCreateBooking";
 import { useRoomTypes } from "@/hooks/useRoomTypes";
 import { BookingFormData } from "@/types";
@@ -58,7 +57,6 @@ const Book = () => {
 
   // Firebase hooks
   const { data: residences = [] } = useResidences(true);
-  const { data: settings } = useSettings();
   const { data: roomTypes = [] } = useRoomTypes(formData.residenceId);
   const createBooking = useCreateBooking();
 
@@ -68,7 +66,7 @@ const Book = () => {
     [residences, formData.residenceId]
   );
 
-  const minStay = settings?.minimumStayMonths || selectedResidence?.minStay || 1;
+  const minStay = selectedResidence?.minStay || 1;
 
   useEffect(() => {
     // Reset room type when residence changes
