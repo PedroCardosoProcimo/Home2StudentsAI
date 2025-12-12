@@ -455,12 +455,24 @@ const AdminResidences = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description">Short Description *</Label>
                 <Textarea
                   id="description"
                   value={formData.description || ""}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={2}
+                  placeholder="Brief description for listing cards..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fullDescription">Full Description</Label>
+                <Textarea
+                  id="fullDescription"
+                  value={formData.fullDescription || ""}
+                  onChange={(e) => setFormData({ ...formData, fullDescription: e.target.value })}
+                  rows={5}
+                  placeholder="Detailed description shown on residence detail page..."
                 />
               </div>
 
