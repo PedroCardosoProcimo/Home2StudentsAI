@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Users, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Loader2, X } from "lucide-react";
 import { RoomType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminRoomTypes, useCreateRoomType, useUpdateRoomType, useDeleteRoomType } from "@/hooks/admin/useAdminRoomTypes";
@@ -34,6 +34,7 @@ const AdminRoomTypes = () => {
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    imagesUrl: [],
   });
 
   const filteredRoomTypes = filterResidence === "all"
@@ -50,6 +51,7 @@ const AdminRoomTypes = () => {
       maxOccupancy: 1,
       area: 0,
       floorPlanUrl: "",
+      imagesUrl: [],
     });
     setIsModalOpen(true);
   };
@@ -92,15 +94,22 @@ const AdminRoomTypes = () => {
       return;
     }
 
+    // Filter out empty image URLs
+    const filteredImages = (formData.imagesUrl || []).filter((url) => url.trim() !== "");
+
     try {
       if (selectedRoomType) {
         await updateRoomType.mutateAsync({
           id: selectedRoomType.id,
           ...formData,
+          imagesUrl: filteredImages.length > 0 ? filteredImages : undefined,
         });
         toast({ title: "Success", description: "Room type updated successfully" });
       } else {
-        await createRoomType.mutateAsync(formData as Omit<RoomType, 'id' | 'createdAt' | 'updatedAt'>);
+        await createRoomType.mutateAsync({
+          ...formData,
+          images: filteredImages.length > 0 ? filteredImages : undefined,
+        } as Omit<RoomType, 'id' | 'createdAt' | 'updatedAt'>);
         toast({ title: "Success", description: "Room type added successfully" });
       }
       setIsModalOpen(false);
@@ -294,6 +303,50 @@ const AdminRoomTypes = () => {
                   placeholder="https://..."
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Room Images</Label>
+              <div className="space-y-2">
+                {(formData.imagesUrl || []).map((image, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      type="url"
+                      value={image}
+                      onChange={(e) => {
+                        const newImages = [...(formData.imagesUrl || [])];
+                        newImages[index] = e.target.value;
+                        setFormData({ ...formData, imagesUrl: newImages });
+                      }}
+                      placeholder="https://..."
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        const newImages = (formData.imagesUrl || []).filter((_, i) => i !== index);
+                        setFormData({ ...formData, imagesUrl: newImages });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setFormData({ ...formData, imagesUrl: [...(formData.imagesUrl || []), ""] });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Image URL
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Add multiple image URLs to display in the room slider
+              </p>
             </div>
           </div>
 

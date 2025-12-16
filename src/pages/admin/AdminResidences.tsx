@@ -30,6 +30,7 @@ interface TempRoomType {
   maxOccupancy: number;
   area: number;
   floorPlanUrl: string;
+  imagesUrl?: string[];
 }
 
 const AdminResidences = () => {
@@ -72,6 +73,7 @@ const AdminResidences = () => {
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    imagesUrl: [],
   });
   const [editingRoomTypeId, setEditingRoomTypeId] = useState<string | null>(null);
 
@@ -89,6 +91,7 @@ const AdminResidences = () => {
           maxOccupancy: rt.maxOccupancy,
           area: rt.area,
           floorPlanUrl: rt.floorPlanUrl,
+          imagesUrl: rt.imagesUrl || [],
         }));
       setRoomTypes(residenceRoomTypes);
     }
@@ -122,6 +125,7 @@ const AdminResidences = () => {
       maxOccupancy: 1,
       area: 0,
       floorPlanUrl: "",
+      imagesUrl: [],
     });
     setEditingRoomTypeId(null);
     setIsModalOpen(true);
@@ -137,6 +141,7 @@ const AdminResidences = () => {
       maxOccupancy: 1,
       area: 0,
       floorPlanUrl: "",
+      imagesUrl: [],
     });
     setEditingRoomTypeId(null);
     setIsModalOpen(true);
@@ -174,6 +179,9 @@ const AdminResidences = () => {
       return;
     }
 
+    // Filter out empty image URLs
+    const filteredImages = (roomTypeFormData.imagesUrl || []).filter((url) => url.trim() !== "");
+
     if (editingRoomTypeId) {
       // Update existing
       setRoomTypes((prev) =>
@@ -187,6 +195,7 @@ const AdminResidences = () => {
                 maxOccupancy: roomTypeFormData.maxOccupancy!,
                 area: roomTypeFormData.area!,
                 floorPlanUrl: roomTypeFormData.floorPlanUrl!,
+                imagesUrl: filteredImages.length > 0 ? filteredImages : undefined,
               }
             : rt
         )
@@ -202,6 +211,7 @@ const AdminResidences = () => {
         maxOccupancy: roomTypeFormData.maxOccupancy!,
         area: roomTypeFormData.area!,
         floorPlanUrl: roomTypeFormData.floorPlanUrl!,
+        imagesUrl: filteredImages.length > 0 ? filteredImages : undefined,
       };
       setRoomTypes((prev) => [...prev, newRoomType]);
     }
@@ -214,6 +224,7 @@ const AdminResidences = () => {
       maxOccupancy: 1,
       area: 0,
       floorPlanUrl: "",
+      imagesUrl: [],
     });
   };
 
@@ -225,6 +236,7 @@ const AdminResidences = () => {
       maxOccupancy: roomType.maxOccupancy,
       area: roomType.area,
       floorPlanUrl: roomType.floorPlanUrl,
+      imagesUrl: roomType.imagesUrl || [],
     });
     setEditingRoomTypeId(roomType.tempId);
   };
@@ -237,6 +249,7 @@ const AdminResidences = () => {
       maxOccupancy: 1,
       area: 0,
       floorPlanUrl: "",
+      imagesUrl: [],
     });
     setEditingRoomTypeId(null);
   };
@@ -301,6 +314,7 @@ const AdminResidences = () => {
               maxOccupancy: rt.maxOccupancy,
               area: rt.area,
               floorPlanUrl: rt.floorPlanUrl,
+              imagesUrl: rt.imagesUrl,
               residenceId,
             });
           } else {
@@ -313,6 +327,7 @@ const AdminResidences = () => {
               maxOccupancy: rt.maxOccupancy,
               area: rt.area,
               floorPlanUrl: rt.floorPlanUrl,
+              imagesUrl: rt.imagesUrl,
             });
           }
         }
@@ -335,6 +350,7 @@ const AdminResidences = () => {
             maxOccupancy: rt.maxOccupancy,
             area: rt.area,
             floorPlanUrl: rt.floorPlanUrl,
+            imagesUrl: rt.imagesUrl,
           });
         }
 
@@ -701,6 +717,50 @@ const AdminResidences = () => {
                           placeholder="https://..."
                         />
                       </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Room Images</Label>
+                      <div className="space-y-2">
+                        {(roomTypeFormData.imagesUrl || []).map((image, index) => (
+                          <div key={index} className="flex gap-2">
+                            <Input
+                              type="url"
+                              value={image}
+                              onChange={(e) => {
+                                const newImages = [...(roomTypeFormData.imagesUrl || [])];
+                                newImages[index] = e.target.value;
+                                setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
+                              }}
+                              placeholder="https://..."
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                const newImages = (roomTypeFormData.imagesUrl || []).filter((_, i) => i !== index);
+                                setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: [...(roomTypeFormData.imagesUrl || []), ""] });
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Image URL
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Add multiple image URLs to display in the room slider
+                      </p>
                     </div>
 
                     <div className="flex gap-2">

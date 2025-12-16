@@ -11,6 +11,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { useRoomType } from "@/hooks/useRoomType";
 import { useResidence } from "@/hooks/useResidence";
 import { ResidenceCardSkeleton } from "@/components/residences/ResidenceCardSkeleton";
@@ -127,19 +134,53 @@ const RoomDetail = () => {
                 )}
               </div>
 
-              {/* Floor Plan Image */}
-              <div>
-                <h2 className="text-xl font-heading font-semibold text-foreground mb-4">
-                  Floor Plan
-                </h2>
-                <div className="relative aspect-[4/3] bg-muted rounded-xl overflow-hidden">
-                  <img
-                    src={roomType.floorPlanUrl}
-                    alt={`Floor plan of ${roomType.name}`}
-                    className="w-full h-full object-contain"
-                  />
+              {/* Room Images Slider */}
+              {roomType.imagesUrl && roomType.imagesUrl.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-heading font-semibold text-foreground mb-4">
+                    Room Photos
+                  </h2>
+                  <div className="relative">
+                    <Carousel className="w-full">
+                      <CarouselContent>
+                        {roomType.imagesUrl.map((image, index) => (
+                          <CarouselItem key={index}>
+                            <div className="relative aspect-[4/3] bg-muted rounded-xl overflow-hidden">
+                              <img
+                                src={image}
+                                alt={`${roomType.name} - Photo ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      {roomType.imagesUrl.length > 1 && (
+                        <>
+                          <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                          <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                        </>
+                      )}
+                    </Carousel>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Floor Plan Image */}
+              {roomType.floorPlanUrl && (
+                <div>
+                  <h2 className="text-xl font-heading font-semibold text-foreground mb-4">
+                    Floor Plan
+                  </h2>
+                  <div className="relative aspect-[4/3] bg-muted rounded-xl overflow-hidden">
+                    <img
+                      src={roomType.floorPlanUrl}
+                      alt={`Floor plan of ${roomType.name}`}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Room Description */}
               <div>
