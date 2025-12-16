@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useResidence } from "@/hooks/useResidence";
 import { ResidenceCardSkeleton } from "@/components/residences/ResidenceCardSkeleton";
+import { calculateMinimumStay } from "@/lib/residenceUtils";
 
 const amenityIcons: { [key: string]: React.ElementType } = {
   "High-Speed WiFi": Wifi,
@@ -77,6 +78,7 @@ const ResidenceDetail = () => {
   }
 
   const { residence, roomTypes } = data;
+  const minStay = calculateMinimumStay(roomTypes);
 
   return (
     <Layout>
@@ -239,7 +241,7 @@ const ResidenceDetail = () => {
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Minimum stay: {residence?.minStay || 1} month{(residence?.minStay || 1) > 1 ? 's' : ''}
+                  Minimum stay: {minStay} month{minStay > 1 ? 's' : ''}
                 </p>
                 {roomTypes.length > 0 && (
                   <Button

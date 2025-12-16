@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { MapPin, ArrowRight } from "lucide-react";
 import { Residence } from "@/types";
 import { Button } from "@/components/ui/button";
+import { useRoomTypes } from "@/hooks/useRoomTypes";
+import { calculateMinimumStay } from "@/lib/residenceUtils";
 
 interface ResidenceCardProps {
   residence: Residence;
@@ -9,6 +11,8 @@ interface ResidenceCardProps {
 }
 
 export function ResidenceCard({ residence, index = 0 }: ResidenceCardProps) {
+  const { data: roomTypes = [] } = useRoomTypes(residence.id);
+  const minStay = calculateMinimumStay(roomTypes);
 
   return (
     <div
@@ -75,7 +79,7 @@ export function ResidenceCard({ residence, index = 0 }: ResidenceCardProps) {
               )}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Min. {residence?.minStay || 1} month{(residence?.minStay || 1) > 1 ? 's' : ''}
+              Min. {minStay} month{minStay > 1 ? 's' : ''}
             </p>
           </div>
           <Button asChild variant="ghost" size="sm" className="group/btn">

@@ -231,11 +231,9 @@ const RoomDetail = () => {
                     </span>
                   </p>
                 </div>
-                {residence && (
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Minimum stay: {residence.minStay || 1} month{(residence.minStay || 1) > 1 ? 's' : ''}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground mb-6">
+                  Minimum stay: {roomType.minStay || 1} month{(roomType.minStay || 1) > 1 ? 's' : ''}
+                </p>
                 <Button
                   variant="coral"
                   size="lg"

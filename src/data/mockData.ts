@@ -13,7 +13,6 @@ export const residences: Residence[] = [
     amenities: ["High-Speed WiFi", "Gym", "Study Rooms", "Rooftop Terrace", "Laundry", "24/7 Security", "Bike Storage", "Common Kitchen"],
     active: true,
     startingPrice: 650,
-    minStay: 3,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   },
@@ -28,7 +27,6 @@ export const residences: Residence[] = [
     amenities: ["High-Speed WiFi", "Study Rooms", "River View Lounge", "Laundry", "24/7 Security", "Common Kitchen", "Event Space"],
     active: true,
     startingPrice: 550,
-    minStay: 3,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   },
@@ -43,7 +41,6 @@ export const residences: Residence[] = [
     amenities: ["High-Speed WiFi", "Library", "Study Rooms", "Courtyard", "Laundry", "24/7 Security", "Common Kitchen", "Music Room"],
     active: true,
     startingPrice: 450,
-    minStay: 1,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   },
@@ -58,7 +55,6 @@ export const residences: Residence[] = [
     amenities: ["High-Speed WiFi", "Gym", "Study Rooms", "Garden", "Laundry", "24/7 Security", "Bike Storage", "BBQ Area", "Sports Court"],
     active: true,
     startingPrice: 400,
-    minStay: 1,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   },
@@ -75,6 +71,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    minStay: 3,
     imagesUrl: [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
       "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&q=80",
@@ -93,6 +90,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    minStay: 3,
     imagesUrl: [
       "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
       "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80",
@@ -110,6 +108,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 2,
     area: 0,
     floorPlanUrl: "",
+    minStay: 3,
     imagesUrl: [
       "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80",
       "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80",
@@ -128,6 +127,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    minStay: 3,
     imagesUrl: [
       "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=800&q=80",
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80",
@@ -146,6 +146,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    minStay: 3,
     imagesUrl: [
       "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=80",
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
@@ -164,6 +165,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    minStay: 1,
     imagesUrl: [
       "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80",
       "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80",
@@ -181,6 +183,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    minStay: 1,
     imagesUrl: [
       "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80",
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80",
@@ -198,6 +201,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 2,
     area: 0,
     floorPlanUrl: "",
+    minStay: 1,
     imagesUrl: [
       "https://images.unsplash.com/photo-1505853413510-7d2d690a2b08?w=800&q=80",
       "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80",
@@ -216,6 +220,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    minStay: 1,
     imagesUrl: [
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
       "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=800&q=80",
@@ -233,6 +238,7 @@ export const roomTypes: RoomType[] = [
     maxOccupancy: 1,
     area: 0,
     floorPlanUrl: "",
+    minStay: 1,
     imagesUrl: [
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80",
       "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80",

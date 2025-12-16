@@ -31,6 +31,7 @@ interface TempRoomType {
   area: number;
   floorPlanUrl: string;
   imagesUrl: string[];
+  minStay: number;
 }
 
 const AdminResidences = () => {
@@ -62,7 +63,6 @@ const AdminResidences = () => {
     amenities: [],
     active: true,
     startingPrice: null,
-    minStay: 1,
   });
 
   // Room types management
@@ -75,6 +75,7 @@ const AdminResidences = () => {
     area: 0,
     floorPlanUrl: "",
     imagesUrl: [],
+    minStay: 1,
   });
   const [editingRoomTypeId, setEditingRoomTypeId] = useState<string | null>(null);
 
@@ -93,6 +94,7 @@ const AdminResidences = () => {
           area: rt.area,
           floorPlanUrl: rt.floorPlanUrl,
           imagesUrl: rt.imagesUrl || [],
+          minStay: rt.minStay || 1,
         }));
       setRoomTypes(residenceRoomTypes);
     }
@@ -116,7 +118,6 @@ const AdminResidences = () => {
       amenities: [],
       active: true,
       startingPrice: null,
-      minStay: 1,
     });
     setRoomTypes([]);
     setRoomTypeFormData({
@@ -127,6 +128,7 @@ const AdminResidences = () => {
       area: 0,
       floorPlanUrl: "",
       imagesUrl: [],
+      minStay: 1,
     });
     setEditingRoomTypeId(null);
     setIsModalOpen(true);
@@ -163,6 +165,7 @@ const AdminResidences = () => {
         area: roomType.area,
         floorPlanUrl: roomType.floorPlanUrl,
         imagesUrl: roomType.imagesUrl || [],
+        minStay: roomType.minStay || 1,
       });
       setEditingRoomTypeId(roomType.tempId);
     } else {
@@ -174,6 +177,7 @@ const AdminResidences = () => {
         area: 0,
         floorPlanUrl: "",
         imagesUrl: [],
+        minStay: 1,
       });
       setEditingRoomTypeId(null);
     }
@@ -182,7 +186,7 @@ const AdminResidences = () => {
 
   const handleSaveRoomType = () => {
     // Validate required fields
-    if (!roomTypeFormData.name || !roomTypeFormData.description || !roomTypeFormData.basePrice) {
+    if (!roomTypeFormData.name || !roomTypeFormData.description || !roomTypeFormData.basePrice || !roomTypeFormData.minStay) {
       toast({ title: "Error", description: "Please fill in all required room type fields", variant: "destructive" });
       return;
     }
@@ -240,6 +244,7 @@ const AdminResidences = () => {
                 area: roomTypeFormData.area!,
                 floorPlanUrl: roomTypeFormData.floorPlanUrl!,
                 imagesUrl: filteredImages,
+                minStay: roomTypeFormData.minStay!,
               }
             : rt
         )
@@ -256,6 +261,7 @@ const AdminResidences = () => {
         area: roomTypeFormData.area!,
         floorPlanUrl: roomTypeFormData.floorPlanUrl!,
         imagesUrl: filteredImages,
+        minStay: roomTypeFormData.minStay!,
       };
       setRoomTypes((prev) => [...prev, newRoomType]);
     }
@@ -269,6 +275,7 @@ const AdminResidences = () => {
       area: 0,
       floorPlanUrl: "",
       imagesUrl: [],
+      minStay: 1,
     });
     setIsRoomTypeDialogOpen(false);
   };
@@ -285,13 +292,14 @@ const AdminResidences = () => {
         area: 0,
         floorPlanUrl: "",
         imagesUrl: [],
+        minStay: 1,
       });
     }
   };
 
   const handleSave = async () => {
     // Validate residence fields
-    if (!formData.name || !formData.city || !formData.address || !formData.description || !formData.minStay) {
+    if (!formData.name || !formData.city || !formData.address || !formData.description) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
       return;
     }
@@ -345,6 +353,7 @@ const AdminResidences = () => {
               area: rt.area,
               floorPlanUrl: rt.floorPlanUrl,
               imagesUrl: imagesUrl,
+              minStay: rt.minStay || 1,
               residenceId,
             });
           } else {
@@ -357,6 +366,7 @@ const AdminResidences = () => {
               area: rt.area,
               floorPlanUrl: rt.floorPlanUrl,
               imagesUrl: imagesUrl,
+              minStay: rt.minStay || 1,
             });
           }
         }
@@ -383,6 +393,7 @@ const AdminResidences = () => {
             area: rt.area,
             floorPlanUrl: rt.floorPlanUrl,
             imagesUrl: imagesUrl,
+            minStay: rt.minStay || 1,
           });
         }
 
@@ -595,29 +606,17 @@ const AdminResidences = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Starting Price (€/month)</Label>
-                  <div className="flex items-center h-10 px-3 py-2 text-sm bg-muted rounded-md border border-border">
-                    {(() => {
-                      const calculatedPrice = calculateMinimumPrice(roomTypes);
-                      return calculatedPrice !== null ? `€${calculatedPrice}/month` : "Price on request (add room types)";
-                    })()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Automatically calculated from room types
-                  </p>
+              <div className="space-y-2">
+                <Label>Starting Price (€/month)</Label>
+                <div className="flex items-center h-10 px-3 py-2 text-sm bg-muted rounded-md border border-border">
+                  {(() => {
+                    const calculatedPrice = calculateMinimumPrice(roomTypes);
+                    return calculatedPrice !== null ? `€${calculatedPrice}/month` : "Price on request (add room types)";
+                  })()}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="minStay">Minimum Stay (months) *</Label>
-                  <Input
-                    id="minStay"
-                    type="number"
-                    min="1"
-                    value={formData.minStay || ""}
-                    onChange={(e) => setFormData({ ...formData, minStay: Number(e.target.value) })}
-                  />
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Automatically calculated from room types
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -786,6 +785,7 @@ const AdminResidences = () => {
               area: 0,
               floorPlanUrl: "",
               imagesUrl: [],
+              minStay: 1,
             });
             setEditingRoomTypeId(null);
           }
@@ -835,25 +835,39 @@ const AdminResidences = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="maxOccupancy">Max Occupancy *</Label>
-              <Select
-                value={String(roomTypeFormData.maxOccupancy || 1)}
-                onValueChange={(value) =>
-                  setRoomTypeFormData({ ...roomTypeFormData, maxOccupancy: Number(value) })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4].map((num) => (
-                    <SelectItem key={num} value={String(num)}>
-                      {num} {num === 1 ? "person" : "people"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="maxOccupancy">Max Occupancy *</Label>
+                <Select
+                  value={String(roomTypeFormData.maxOccupancy || 1)}
+                  onValueChange={(value) =>
+                    setRoomTypeFormData({ ...roomTypeFormData, maxOccupancy: Number(value) })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4].map((num) => (
+                      <SelectItem key={num} value={String(num)}>
+                        {num} {num === 1 ? "person" : "people"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="minStay">Minimum Stay (months) *</Label>
+                <Input
+                  id="minStay"
+                  type="number"
+                  min="1"
+                  value={roomTypeFormData.minStay || ""}
+                  onChange={(e) =>
+                    setRoomTypeFormData({ ...roomTypeFormData, minStay: Number(e.target.value) })
+                  }
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

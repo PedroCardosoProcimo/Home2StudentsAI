@@ -77,7 +77,7 @@ const Book = () => {
     [roomTypes, formData.roomTypeId]
   );
 
-  const minStay = selectedResidence?.minStay || 1;
+  const minStay = selectedRoomType?.minStay || 1;
 
   useEffect(() => {
     // Reset room type when residence changes
@@ -108,7 +108,7 @@ const Book = () => {
     }
 
     // Check minimum stay requirement
-    if (formData.checkIn && formData.checkOut && selectedResidence) {
+    if (formData.checkIn && formData.checkOut && selectedRoomType) {
       const monthsDiff = differenceInMonths(formData.checkOut, formData.checkIn);
       if (monthsDiff < minStay) {
         newErrors.checkOut = `Minimum stay is ${minStay} month${minStay > 1 ? 's' : ''}`;
@@ -350,7 +350,7 @@ const Book = () => {
                     </div>
                   </div>
 
-                  {selectedResidence && (
+                  {selectedRoomType && (
                     <p className="text-sm text-muted-foreground">
                       Minimum stay: {minStay} month{minStay > 1 ? 's' : ''}
                     </p>

@@ -37,6 +37,7 @@ const AdminRoomTypes = () => {
     area: 0,
     floorPlanUrl: "",
     imagesUrl: [],
+    minStay: 1,
   });
 
   const filteredRoomTypes = filterResidence === "all"
@@ -61,6 +62,7 @@ const AdminRoomTypes = () => {
       area: 0,
       floorPlanUrl: "",
       imagesUrl: [],
+      minStay: 1,
     });
     setIsResidenceSelectDialogOpen(false);
     setIsModalOpen(true);
@@ -80,7 +82,7 @@ const AdminRoomTypes = () => {
 
   const handleSave = async () => {
     // Validate required fields
-    if (!formData.residenceId || !formData.name || !formData.description || !formData.basePrice) {
+    if (!formData.residenceId || !formData.name || !formData.description || !formData.basePrice || !formData.minStay) {
       toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
       return;
     }
@@ -372,6 +374,17 @@ const AdminRoomTypes = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minStay">Minimum Stay (months) *</Label>
+              <Input
+                id="minStay"
+                type="number"
+                min="1"
+                value={formData.minStay || ""}
+                onChange={(e) => setFormData({ ...formData, minStay: Number(e.target.value) })}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
