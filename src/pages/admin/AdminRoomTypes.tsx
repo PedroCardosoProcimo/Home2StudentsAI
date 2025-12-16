@@ -23,9 +23,11 @@ const AdminRoomTypes = () => {
   const deleteRoomType = useDeleteRoomType();
 
   const [filterResidence, setFilterResidence] = useState<string>("all");
+  const [isResidenceSelectDialogOpen, setIsResidenceSelectDialogOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRoomType, setSelectedRoomType] = useState<RoomType | null>(null);
+  const [selectedResidenceId, setSelectedResidenceId] = useState<string>("");
   const [formData, setFormData] = useState<Partial<RoomType>>({
     residenceId: "",
     name: "",
@@ -43,8 +45,15 @@ const AdminRoomTypes = () => {
 
   const openAddModal = () => {
     setSelectedRoomType(null);
+    setSelectedResidenceId("");
+    setIsResidenceSelectDialogOpen(true);
+  };
+
+  const openAddModalForResidence = (residenceId: string) => {
+    setSelectedRoomType(null);
+    setSelectedResidenceId(residenceId);
     setFormData({
-      residenceId: "",
+      residenceId: residenceId,
       name: "",
       description: "",
       basePrice: 0,
@@ -53,11 +62,13 @@ const AdminRoomTypes = () => {
       floorPlanUrl: "",
       imagesUrl: [],
     });
+    setIsResidenceSelectDialogOpen(false);
     setIsModalOpen(true);
   };
 
   const openEditModal = (roomType: RoomType) => {
     setSelectedRoomType(roomType);
+    setSelectedResidenceId(roomType.residenceId);
     setFormData({ ...roomType });
     setIsModalOpen(true);
   };
@@ -129,6 +140,8 @@ const AdminRoomTypes = () => {
         toast({ title: "Success", description: "Room type added successfully" });
       }
       setIsModalOpen(false);
+      setSelectedResidenceId("");
+      setSelectedRoomType(null);
     } catch (err) {
       toast({
         title: "Error",
@@ -224,8 +237,67 @@ const AdminRoomTypes = () => {
         </CardContent>
       </Card>
 
+      {/* Residence Selection Dialog */}
+      <Dialog 
+        open={isResidenceSelectDialogOpen} 
+        onOpenChange={(open) => {
+          setIsResidenceSelectDialogOpen(open);
+          if (!open) {
+            setSelectedResidenceId("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Residence</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              <Label>Choose a residence to add a room type to</Label>
+              <Select
+                value={selectedResidenceId}
+                onValueChange={setSelectedResidenceId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select residence" />
+                </SelectTrigger>
+                <SelectContent>
+                  {residences.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsResidenceSelectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedResidenceId) {
+                  openAddModalForResidence(selectedResidenceId);
+                }
+              }}
+              disabled={!selectedResidenceId}
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Add/Edit Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog 
+        open={isModalOpen} 
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) {
+            setSelectedResidenceId("");
+            setSelectedRoomType(null);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{selectedRoomType ? "Edit Room Type" : "Add Room Type"}</DialogTitle>
@@ -237,6 +309,7 @@ const AdminRoomTypes = () => {
               <Select
                 value={formData.residenceId || ""}
                 onValueChange={(value) => setFormData({ ...formData, residenceId: value })}
+                disabled={!!selectedResidenceId || !!selectedRoomType}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select residence" />
@@ -247,6 +320,11 @@ const AdminRoomTypes = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {(selectedResidenceId || selectedRoomType) && (
+                <p className="text-xs text-muted-foreground">
+                  Residence cannot be changed when editing a room type
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

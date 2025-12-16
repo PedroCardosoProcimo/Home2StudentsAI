@@ -50,6 +50,7 @@ const AdminResidences = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRoomTypeDialogOpen, setIsRoomTypeDialogOpen] = useState(false);
   const [selectedResidence, setSelectedResidence] = useState<Residence | null>(null);
   const [formData, setFormData] = useState<Partial<Residence>>({
     name: "",
@@ -91,7 +92,7 @@ const AdminResidences = () => {
           maxOccupancy: rt.maxOccupancy,
           area: rt.area,
           floorPlanUrl: rt.floorPlanUrl,
-          imagesUrl: rt.imagesUrl,
+          imagesUrl: rt.imagesUrl || [],
         }));
       setRoomTypes(residenceRoomTypes);
     }
@@ -152,7 +153,34 @@ const AdminResidences = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleAddRoomType = () => {
+  const openRoomTypeDialog = (roomType?: TempRoomType) => {
+    if (roomType) {
+      setRoomTypeFormData({
+        name: roomType.name,
+        description: roomType.description,
+        basePrice: roomType.basePrice,
+        maxOccupancy: roomType.maxOccupancy,
+        area: roomType.area,
+        floorPlanUrl: roomType.floorPlanUrl,
+        imagesUrl: roomType.imagesUrl || [],
+      });
+      setEditingRoomTypeId(roomType.tempId);
+    } else {
+      setRoomTypeFormData({
+        name: "",
+        description: "",
+        basePrice: 0,
+        maxOccupancy: 1,
+        area: 0,
+        floorPlanUrl: "",
+        imagesUrl: [],
+      });
+      setEditingRoomTypeId(null);
+    }
+    setIsRoomTypeDialogOpen(true);
+  };
+
+  const handleSaveRoomType = () => {
     // Validate required fields
     if (!roomTypeFormData.name || !roomTypeFormData.description || !roomTypeFormData.basePrice) {
       toast({ title: "Error", description: "Please fill in all required room type fields", variant: "destructive" });
@@ -232,7 +260,7 @@ const AdminResidences = () => {
       setRoomTypes((prev) => [...prev, newRoomType]);
     }
 
-    // Reset form
+    // Reset form and close dialog
     setRoomTypeFormData({
       name: "",
       description: "",
@@ -242,38 +270,22 @@ const AdminResidences = () => {
       floorPlanUrl: "",
       imagesUrl: [],
     });
-  };
-
-  const handleEditRoomType = (roomType: TempRoomType) => {
-    setRoomTypeFormData({
-      name: roomType.name,
-      description: roomType.description,
-      basePrice: roomType.basePrice,
-      maxOccupancy: roomType.maxOccupancy,
-      area: roomType.area,
-      floorPlanUrl: roomType.floorPlanUrl,
-      imagesUrl: roomType.imagesUrl || [],
-    });
-    setEditingRoomTypeId(roomType.tempId);
-  };
-
-  const handleCancelEditRoomType = () => {
-    setRoomTypeFormData({
-      name: "",
-      description: "",
-      basePrice: 0,
-      maxOccupancy: 1,
-      area: 0,
-      floorPlanUrl: "",
-      imagesUrl: [],
-    });
-    setEditingRoomTypeId(null);
+    setIsRoomTypeDialogOpen(false);
   };
 
   const handleDeleteRoomType = (tempId: string) => {
     setRoomTypes((prev) => prev.filter((rt) => rt.tempId !== tempId));
     if (editingRoomTypeId === tempId) {
-      handleCancelEditRoomType();
+      setEditingRoomTypeId(null);
+      setRoomTypeFormData({
+        name: "",
+        description: "",
+        basePrice: 0,
+        maxOccupancy: 1,
+        area: 0,
+        floorPlanUrl: "",
+        imagesUrl: [],
+      });
     }
   };
 
@@ -320,8 +332,10 @@ const AdminResidences = () => {
 
         // Update or create room types
         for (const rt of roomTypes) {
+          // Ensure imagesUrl is always an array, filter out any undefined/null values
+          const imagesUrl = (rt.imagesUrl || []).filter((url): url is string => Boolean(url));
+          
           if (rt.id) {
-            // Update existing
             await updateRoomType.mutateAsync({
               id: rt.id,
               name: rt.name,
@@ -330,11 +344,10 @@ const AdminResidences = () => {
               maxOccupancy: rt.maxOccupancy,
               area: rt.area,
               floorPlanUrl: rt.floorPlanUrl,
-              imagesUrl: rt.imagesUrl,
+              imagesUrl: imagesUrl,
               residenceId,
             });
           } else {
-            // Create new
             await createRoomType.mutateAsync({
               residenceId,
               name: rt.name,
@@ -343,7 +356,7 @@ const AdminResidences = () => {
               maxOccupancy: rt.maxOccupancy,
               area: rt.area,
               floorPlanUrl: rt.floorPlanUrl,
-              imagesUrl: rt.imagesUrl,
+              imagesUrl: imagesUrl,
             });
           }
         }
@@ -358,6 +371,9 @@ const AdminResidences = () => {
 
         // Create all room types
         for (const rt of roomTypes) {
+          // Ensure imagesUrl is always an array, filter out any undefined/null values
+          const imagesUrl = (rt.imagesUrl || []).filter((url): url is string => Boolean(url));
+          
           await createRoomType.mutateAsync({
             residenceId,
             name: rt.name,
@@ -366,7 +382,7 @@ const AdminResidences = () => {
             maxOccupancy: rt.maxOccupancy,
             area: rt.area,
             floorPlanUrl: rt.floorPlanUrl,
-            imagesUrl: rt.imagesUrl,
+            imagesUrl: imagesUrl,
           });
         }
 
@@ -607,14 +623,14 @@ const AdminResidences = () => {
               <div className="space-y-2">
                 <Label>Amenities</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {config?.amenities.map((amenity) => (
-                    <div key={amenity.name} className="flex items-center space-x-2">
+                  {config?.amenities.map((amenity, index) => (
+                    <div key={`${amenity.name}-${index}`} className="flex items-center space-x-2">
                       <Checkbox
-                        id={amenity.name}
+                        id={`${amenity.name}-${index}`}
                         checked={formData.amenities?.includes(amenity.name)}
                         onCheckedChange={() => toggleAmenity(amenity.name)}
                       />
-                      <label htmlFor={amenity.name} className="text-sm">
+                      <label htmlFor={`${amenity.name}-${index}`} className="text-sm">
                         {amenity.name}
                       </label>
                     </div>
@@ -641,161 +657,11 @@ const AdminResidences = () => {
                     At least one room type is required
                   </p>
                 </div>
+                <Button type="button" onClick={() => openRoomTypeDialog()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Room Type
+                </Button>
               </div>
-
-              {/* Room Type Form */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="grid gap-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="roomTypeName">Room Type Name *</Label>
-                        <Input
-                          id="roomTypeName"
-                          value={roomTypeFormData.name || ""}
-                          onChange={(e) =>
-                            setRoomTypeFormData({ ...roomTypeFormData, name: e.target.value })
-                          }
-                          placeholder="e.g., Studio Apartment"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="basePrice">Base Price (€/month) *</Label>
-                        <Input
-                          id="basePrice"
-                          type="number"
-                          value={roomTypeFormData.basePrice || ""}
-                          onChange={(e) =>
-                            setRoomTypeFormData({ ...roomTypeFormData, basePrice: Number(e.target.value) })
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="roomTypeDescription">Description *</Label>
-                      <Textarea
-                        id="roomTypeDescription"
-                        value={roomTypeFormData.description || ""}
-                        onChange={(e) =>
-                          setRoomTypeFormData({ ...roomTypeFormData, description: e.target.value })
-                        }
-                        rows={2}
-                        placeholder="Describe the room type..."
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="maxOccupancy">Max Occupancy *</Label>
-                      <Select
-                        value={String(roomTypeFormData.maxOccupancy || 1)}
-                        onValueChange={(value) =>
-                          setRoomTypeFormData({ ...roomTypeFormData, maxOccupancy: Number(value) })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4].map((num) => (
-                            <SelectItem key={num} value={String(num)}>
-                              {num} {num === 1 ? "person" : "people"}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="area">Area (m²) *</Label>
-                        <Input
-                          id="area"
-                          type="number"
-                          min="1"
-                          step="0.01"
-                          value={roomTypeFormData.area || ""}
-                          onChange={(e) =>
-                            setRoomTypeFormData({ ...roomTypeFormData, area: Number(e.target.value) })
-                          }
-                          placeholder="e.g., 25.5"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="floorPlanUrl">Floor Plan URL *</Label>
-                        <Input
-                          id="floorPlanUrl"
-                          type="url"
-                          value={roomTypeFormData.floorPlanUrl || ""}
-                          onChange={(e) =>
-                            setRoomTypeFormData({ ...roomTypeFormData, floorPlanUrl: e.target.value })
-                          }
-                          placeholder="https://..."
-                        />
-                      </div>
-                    </div>
-
-                      <div className="space-y-2">
-                        <Label>Room Images *</Label>
-                        <div className="space-y-2">
-                          {(roomTypeFormData.imagesUrl || []).map((image, index) => (
-                            <div key={index} className="flex gap-2">
-                              <Input
-                                type="url"
-                                value={image}
-                                onChange={(e) => {
-                                  const newImages = [...(roomTypeFormData.imagesUrl || [])];
-                                  newImages[index] = e.target.value;
-                                  setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
-                                }}
-                                placeholder="https://..."
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => {
-                                  const newImages = (roomTypeFormData.imagesUrl || []).filter((_, i) => i !== index);
-                                  setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
-                                }}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: [...(roomTypeFormData.imagesUrl || []), ""] });
-                            }}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Image URL
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          At least one image URL is required
-                        </p>
-                      </div>
-
-                    <div className="flex gap-2">
-                      <Button type="button" onClick={handleAddRoomType} className="flex-1">
-                        {editingRoomTypeId ? "Update Room Type" : "Add Room Type"}
-                      </Button>
-                      {editingRoomTypeId && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleCancelEditRoomType}
-                        >
-                          Cancel
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
 
               {/* Room Types List */}
               {roomTypes.length > 0 ? (
@@ -820,7 +686,7 @@ const AdminResidences = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleEditRoomType(rt)}
+                                onClick={() => openRoomTypeDialog(rt)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -904,6 +770,176 @@ const AdminResidences = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Room Type Dialog */}
+      <Dialog 
+        open={isRoomTypeDialogOpen} 
+        onOpenChange={(open) => {
+          setIsRoomTypeDialogOpen(open);
+          if (!open) {
+            // Reset form when dialog closes
+            setRoomTypeFormData({
+              name: "",
+              description: "",
+              basePrice: 0,
+              maxOccupancy: 1,
+              area: 0,
+              floorPlanUrl: "",
+              imagesUrl: [],
+            });
+            setEditingRoomTypeId(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingRoomTypeId ? "Edit Room Type" : "Add Room Type"}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="roomTypeName">Room Type Name *</Label>
+                <Input
+                  id="roomTypeName"
+                  value={roomTypeFormData.name || ""}
+                  onChange={(e) =>
+                    setRoomTypeFormData({ ...roomTypeFormData, name: e.target.value })
+                  }
+                  placeholder="e.g., Studio Apartment"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="basePrice">Base Price (€/month) *</Label>
+                <Input
+                  id="basePrice"
+                  type="number"
+                  value={roomTypeFormData.basePrice || ""}
+                  onChange={(e) =>
+                    setRoomTypeFormData({ ...roomTypeFormData, basePrice: Number(e.target.value) })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="roomTypeDescription">Description *</Label>
+              <Textarea
+                id="roomTypeDescription"
+                value={roomTypeFormData.description || ""}
+                onChange={(e) =>
+                  setRoomTypeFormData({ ...roomTypeFormData, description: e.target.value })
+                }
+                rows={3}
+                placeholder="Describe the room type..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxOccupancy">Max Occupancy *</Label>
+              <Select
+                value={String(roomTypeFormData.maxOccupancy || 1)}
+                onValueChange={(value) =>
+                  setRoomTypeFormData({ ...roomTypeFormData, maxOccupancy: Number(value) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4].map((num) => (
+                    <SelectItem key={num} value={String(num)}>
+                      {num} {num === 1 ? "person" : "people"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="area">Area (m²) *</Label>
+                <Input
+                  id="area"
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  value={roomTypeFormData.area || ""}
+                  onChange={(e) =>
+                    setRoomTypeFormData({ ...roomTypeFormData, area: Number(e.target.value) })
+                  }
+                  placeholder="e.g., 25.5"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="floorPlanUrl">Floor Plan URL *</Label>
+                <Input
+                  id="floorPlanUrl"
+                  type="url"
+                  value={roomTypeFormData.floorPlanUrl || ""}
+                  onChange={(e) =>
+                    setRoomTypeFormData({ ...roomTypeFormData, floorPlanUrl: e.target.value })
+                  }
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Room Images *</Label>
+              <div className="space-y-2">
+                {(roomTypeFormData.imagesUrl || []).map((image, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      type="url"
+                      value={image}
+                      onChange={(e) => {
+                        const newImages = [...(roomTypeFormData.imagesUrl || [])];
+                        newImages[index] = e.target.value;
+                        setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
+                      }}
+                      placeholder="https://..."
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        const newImages = (roomTypeFormData.imagesUrl || []).filter((_, i) => i !== index);
+                        setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: [...(roomTypeFormData.imagesUrl || []), ""] });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Image URL
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                At least one image URL is required
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRoomTypeDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveRoomType}>
+              {editingRoomTypeId ? "Update Room Type" : "Add Room Type"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
