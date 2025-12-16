@@ -14,12 +14,13 @@ service firebase.storage {
              request.auth.token.email != null;
     }
 
-    // Regulations storage rules
-    match /regulations/{residenceId}/{regulationId}.pdf {
+    // Regulations storage rules - match any file in regulations/{residenceId}/
+    match /regulations/{residenceId}/{fileName} {
       // Anyone authenticated can read (download) regulation PDFs
       allow read: if isAuthenticated();
 
       // Only admins can upload regulation PDFs
+      // File must be PDF and under 10MB
       allow write: if isAdmin() &&
                      request.resource.size <= 10 * 1024 * 1024 &&
                      request.resource.contentType == 'application/pdf';
@@ -28,16 +29,11 @@ service firebase.storage {
       allow delete: if isAdmin();
     }
 
-    // Residence images (if you have these)
+    // Residence images - match any file in residences/{residenceId}/
     match /residences/{residenceId}/{fileName} {
       allow read: if true;
       allow write: if isAdmin();
       allow delete: if isAdmin();
-    }
-
-    // Default: deny all other access
-    match /{allPaths=**} {
-      allow read, write: if false;
     }
   }
 }
