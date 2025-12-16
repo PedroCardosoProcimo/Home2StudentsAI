@@ -4,7 +4,10 @@ import { ArrowLeft, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RegulationList } from '@/components/regulations/RegulationList';
+import { RegulationHistory } from '@/components/regulations/RegulationHistory';
+import { RegulationAuditLog } from '@/components/regulations/RegulationAuditLog';
 import { RegulationUploadDialog } from '@/components/regulations/RegulationUploadDialog';
 import { useResidence } from '@/hooks/useResidence';
 
@@ -76,7 +79,25 @@ export default function AdminRegulations() {
           </div>
         </CardHeader>
         <CardContent>
-          <RegulationList residenceId={residence.id} />
+          <Tabs defaultValue="list" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="list">Current View</TabsTrigger>
+              <TabsTrigger value="history">Version History</TabsTrigger>
+              <TabsTrigger value="audit">Audit Log</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="list" className="mt-6">
+              <RegulationList residenceId={residence.id} />
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-6">
+              <RegulationHistory residenceId={residence.id} />
+            </TabsContent>
+
+            <TabsContent value="audit" className="mt-6">
+              <RegulationAuditLog residenceId={residence.id} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 

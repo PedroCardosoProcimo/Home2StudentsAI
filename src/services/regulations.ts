@@ -11,9 +11,11 @@ import {
   Timestamp,
   updateDoc,
   writeBatch,
+  runTransaction,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Regulation, CreateRegulationInput, UpdateRegulationInput } from '@/types';
+import { createAuditLogEntry } from './auditLog';
 
 const REGULATIONS_COLLECTION = 'regulations';
 
@@ -62,6 +64,20 @@ export const createRegulation = async (
     collection(db, REGULATIONS_COLLECTION),
     regulationData
   );
+
+  // Create audit log entry
+  await createAuditLogEntry({
+    regulationId: docRef.id,
+    residenceId: data.residenceId,
+    action: 'CREATED',
+    performedBy: data.createdBy,
+    performedByEmail: data.createdByEmail,
+    metadata: {
+      version: data.version,
+      fileName: data.fileName,
+      fileSize: data.fileSize,
+    },
+  });
 
   return docRef.id;
 };
@@ -190,8 +206,14 @@ export const updateRegulation = async (
  * Delete a regulation
  * Regulations that are currently active cannot be deleted
  * @param id The regulation ID
+ * @param performedBy User ID performing the action
+ * @param performedByEmail User email performing the action
  */
-export const deleteRegulation = async (id: string): Promise<void> => {
+export const deleteRegulation = async (
+  id: string,
+  performedBy: string,
+  performedByEmail: string
+): Promise<void> => {
   const docRef = doc(db, REGULATIONS_COLLECTION, id);
   const docSnap = await getDoc(docRef);
 
@@ -208,7 +230,128 @@ export const deleteRegulation = async (id: string): Promise<void> => {
     );
   }
 
+  // Delete the regulation
   await deleteDoc(docRef);
+
+  // Create audit log entry
+  await createAuditLogEntry({
+    regulationId: id,
+    residenceId: regulation.residenceId,
+    action: 'DELETED',
+    performedBy,
+    performedByEmail,
+    metadata: {
+      version: regulation.version,
+      fileName: regulation.fileName,
+    },
+  });
+};
+
+/**
+ * Atomically switches the active regulation for a residence.
+ * Uses Firestore transaction to ensure exactly one regulation is active.
+ *
+ * @param residenceId The residence ID
+ * @param newActiveRegulationId The regulation to make active
+ * @param performedBy User ID performing the action
+ * @param performedByEmail User email performing the action
+ * @throws Error if regulation not found or transaction fails
+ * @returns Object with previous and new active regulation IDs
+ */
+export const setActiveRegulationAtomic = async (
+  residenceId: string,
+  newActiveRegulationId: string,
+  performedBy: string,
+  performedByEmail: string
+): Promise<{ previousActiveId: string | null; newActiveId: string }> => {
+  const result = await runTransaction(db, async (transaction) => {
+    // 1. Read the new regulation to activate
+    const newRegulationRef = doc(db, REGULATIONS_COLLECTION, newActiveRegulationId);
+    const newRegulationSnap = await transaction.get(newRegulationRef);
+
+    if (!newRegulationSnap.exists()) {
+      throw new Error('Regulation not found.');
+    }
+
+    const newRegulation = {
+      id: newRegulationSnap.id,
+      ...newRegulationSnap.data(),
+    } as Regulation;
+
+    // 2. Validate that the regulation belongs to the specified residence
+    if (newRegulation.residenceId !== residenceId) {
+      throw new Error('Regulation does not belong to this residence.');
+    }
+
+    // 3. Check if this regulation is already active (no-op)
+    if (newRegulation.isActive) {
+      return {
+        previousActiveId: null,
+        newActiveId: newActiveRegulationId,
+      };
+    }
+
+    // 4. Find the currently active regulation for this residence
+    const activeQuery = query(
+      collection(db, REGULATIONS_COLLECTION),
+      where('residenceId', '==', residenceId),
+      where('isActive', '==', true)
+    );
+
+    const activeSnapshot = await getDocs(activeQuery);
+    let previousActiveId: string | null = null;
+
+    // 5. Deactivate the current active regulation (if exists)
+    if (!activeSnapshot.empty) {
+      const currentActiveDoc = activeSnapshot.docs[0];
+      previousActiveId = currentActiveDoc.id;
+
+      transaction.update(currentActiveDoc.ref, {
+        isActive: false,
+        updatedAt: Timestamp.now(),
+      });
+    }
+
+    // 6. Activate the new regulation
+    transaction.update(newRegulationRef, {
+      isActive: true,
+      updatedAt: Timestamp.now(),
+    });
+
+    return {
+      previousActiveId,
+      newActiveId: newActiveRegulationId,
+      newRegulationVersion: newRegulation.version,
+    };
+  });
+
+  // Create audit log entries after transaction succeeds
+  if (result.previousActiveId) {
+    await createAuditLogEntry({
+      regulationId: result.previousActiveId,
+      residenceId,
+      action: 'DEACTIVATED',
+      performedBy,
+      performedByEmail,
+    });
+  }
+
+  await createAuditLogEntry({
+    regulationId: newActiveRegulationId,
+    residenceId,
+    action: 'ACTIVATED',
+    performedBy,
+    performedByEmail,
+    metadata: {
+      version: result.newRegulationVersion,
+      previousActiveId: result.previousActiveId || undefined,
+    },
+  });
+
+  return {
+    previousActiveId: result.previousActiveId,
+    newActiveId: result.newActiveId,
+  };
 };
 
 /**

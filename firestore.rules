@@ -39,6 +39,24 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Regulation audit logs collection rules
+    // Immutable audit trail - no updates or deletes allowed
+    match /regulation_audit_logs/{logId} {
+      // Only admins can read audit logs
+      allow read: if isAdmin();
+
+      // Only admins can create audit logs
+      allow create: if isAdmin() &&
+                      request.resource.data.keys().hasAll([
+                        'regulationId', 'residenceId', 'action',
+                        'performedBy', 'performedByEmail', 'timestamp'
+                      ]) &&
+                      request.resource.data.action in ['CREATED', 'ACTIVATED', 'DEACTIVATED', 'DELETED'];
+
+      // Audit logs are immutable - no updates or deletes allowed
+      allow update, delete: if false;
+    }
+
     // Residences collection rules
     match /residences/{residenceId} {
       // Anyone can read residences

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Regulation, CreateRegulationInput, UpdateRegulationInput } from '@/types';
+import type { CreateRegulationInput, UpdateRegulationInput } from '@/types';
 import {
   getRegulationsByResidence,
   getActiveRegulation,
@@ -7,6 +7,7 @@ import {
   createRegulation,
   updateRegulation,
   deleteRegulation,
+  setActiveRegulationAtomic,
 } from '@/services/regulations';
 import { deleteRegulationPDF } from '@/services/storage/regulations';
 
@@ -105,12 +106,16 @@ export const useDeleteRegulation = () => {
     mutationFn: async ({
       regulationId,
       filePath,
+      performedBy,
+      performedByEmail,
     }: {
       regulationId: string;
       filePath: string;
+      performedBy: string;
+      performedByEmail: string;
     }) => {
-      // Delete from Firestore first
-      await deleteRegulation(regulationId);
+      // Delete from Firestore first (with audit log)
+      await deleteRegulation(regulationId, performedBy, performedByEmail);
       // Then delete the file from storage
       await deleteRegulationPDF(filePath);
     },
@@ -125,17 +130,30 @@ export const useDeleteRegulation = () => {
 
 /**
  * Hook to set a regulation as active
- * This is a convenience wrapper around useUpdateRegulation
+ * Uses atomic transaction to ensure exactly one regulation is active per residence
  * @returns Mutation result
  */
 export const useSetActiveRegulation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ regulationId }: { regulationId: string }) =>
-      updateRegulation(regulationId, { isActive: true }),
-    onSuccess: () => {
-      // Invalidate all regulation queries to refresh active status
+    mutationFn: ({
+      residenceId,
+      regulationId,
+      performedBy,
+      performedByEmail,
+    }: {
+      residenceId: string;
+      regulationId: string;
+      performedBy: string;
+      performedByEmail: string;
+    }) => setActiveRegulationAtomic(residenceId, regulationId, performedBy, performedByEmail),
+    onSuccess: (_, variables) => {
+      // Invalidate all regulation queries for this residence
+      queryClient.invalidateQueries({
+        queryKey: ['regulations', variables.residenceId],
+      });
+      // Also invalidate all regulations queries (for other views)
       queryClient.invalidateQueries({
         queryKey: ['regulations'],
       });

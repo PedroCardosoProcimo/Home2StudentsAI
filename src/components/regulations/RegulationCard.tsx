@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useDeleteRegulation, useSetActiveRegulation } from '@/hooks/useRegulations';
 import type { Regulation } from '@/types';
 import { cn } from '@/lib/utils';
@@ -30,7 +31,9 @@ interface RegulationCardProps {
 
 export function RegulationCard({ regulation }: RegulationCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showSetActiveDialog, setShowSetActiveDialog] = useState(false);
   const { toast } = useToast();
+  const { user } = useAdminAuth();
   const deleteRegulation = useDeleteRegulation();
   const setActiveRegulation = useSetActiveRegulation();
 
@@ -58,14 +61,27 @@ export function RegulationCard({ regulation }: RegulationCardProps) {
 
   // Handle set as active
   const handleSetActive = async () => {
+    if (!user || !user.email) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to perform this action',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       await setActiveRegulation.mutateAsync({
+        residenceId: regulation.residenceId,
         regulationId: regulation.id,
+        performedBy: user.uid,
+        performedByEmail: user.email,
       });
       toast({
         title: 'Success',
         description: `Regulation ${regulation.version} is now active`,
       });
+      setShowSetActiveDialog(false);
     } catch (error) {
       toast({
         title: 'Error',
@@ -77,10 +93,21 @@ export function RegulationCard({ regulation }: RegulationCardProps) {
 
   // Handle delete
   const handleDelete = async () => {
+    if (!user || !user.email) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to perform this action',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       await deleteRegulation.mutateAsync({
         regulationId: regulation.id,
         filePath: regulation.filePath,
+        performedBy: user.uid,
+        performedByEmail: user.email,
       });
       toast({
         title: 'Success',
@@ -145,7 +172,7 @@ export function RegulationCard({ regulation }: RegulationCardProps) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleSetActive}
+                onClick={() => setShowSetActiveDialog(true)}
                 disabled={setActiveRegulation.isPending}
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -178,6 +205,31 @@ export function RegulationCard({ regulation }: RegulationCardProps) {
           </div>
         </div>
       </div>
+
+      {/* Set as Active confirmation dialog */}
+      <AlertDialog open={showSetActiveDialog} onOpenChange={setShowSetActiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Set as Active Regulation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to make version{' '}
+              <strong>{regulation.version}</strong> the active regulation?
+              <br /><br />
+              Students will see this version going forward. The current active
+              regulation will be automatically archived.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSetActive}
+              disabled={setActiveRegulation.isPending}
+            >
+              {setActiveRegulation.isPending ? 'Setting...' : 'Set as Active'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

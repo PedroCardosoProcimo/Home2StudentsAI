@@ -132,6 +132,7 @@ export function RegulationUploadDialog({
         isActive: setAsActive,
         publishedAt: new Date(),
         createdBy: user.uid,
+        createdByEmail: user.email || '',
       });
 
       toast({

@@ -33,6 +33,7 @@ export interface CreateRegulationInput {
   isActive: boolean;
   publishedAt: Date;
   createdBy: string;
+  createdByEmail: string;
 }
 
 /**
@@ -42,4 +43,58 @@ export interface UpdateRegulationInput {
   version?: string;
   isActive?: boolean;
   publishedAt?: Date;
+}
+
+/**
+ * Audit action types for regulation changes
+ */
+export type RegulationAuditAction = 'CREATED' | 'ACTIVATED' | 'DEACTIVATED' | 'DELETED';
+
+/**
+ * Audit log entry for regulation changes
+ * Immutable record of all regulation operations
+ */
+export interface RegulationAuditLog {
+  id: string;
+  regulationId: string;
+  residenceId: string;
+  action: RegulationAuditAction;
+  performedBy: string;        // User ID
+  performedByEmail: string;   // For display
+  performedByName?: string;   // If available
+  timestamp: Timestamp;       // Server timestamp
+  metadata?: {
+    version?: string;
+    previousActiveId?: string;
+    fileName?: string;
+    fileSize?: number;
+  };
+}
+
+/**
+ * Input data for creating an audit log entry
+ */
+export interface CreateAuditLogInput {
+  regulationId: string;
+  residenceId: string;
+  action: RegulationAuditAction;
+  performedBy: string;
+  performedByEmail: string;
+  performedByName?: string;
+  metadata?: {
+    version?: string;
+    previousActiveId?: string;
+    fileName?: string;
+    fileSize?: number;
+  };
+}
+
+/**
+ * Filter options for querying audit logs
+ */
+export interface AuditLogFilters {
+  startDate?: Date;
+  endDate?: Date;
+  actions?: RegulationAuditAction[];
+  limit?: number;
 }

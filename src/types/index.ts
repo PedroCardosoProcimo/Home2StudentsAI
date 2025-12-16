@@ -83,4 +83,12 @@ export interface AdminUser {
 }
 
 // Re-export regulation types
-export type { Regulation, CreateRegulationInput, UpdateRegulationInput } from './regulation';
+export type {
+  Regulation,
+  CreateRegulationInput,
+  UpdateRegulationInput,
+  RegulationAuditAction,
+  RegulationAuditLog,
+  CreateAuditLogInput,
+  AuditLogFilters,
+} from './regulation';
