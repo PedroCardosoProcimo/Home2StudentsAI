@@ -30,7 +30,7 @@ interface TempRoomType {
   maxOccupancy: number;
   area: number;
   floorPlanUrl: string;
-  imagesUrl?: string[];
+  imagesUrl: string[];
 }
 
 const AdminResidences = () => {
@@ -91,7 +91,7 @@ const AdminResidences = () => {
           maxOccupancy: rt.maxOccupancy,
           area: rt.area,
           floorPlanUrl: rt.floorPlanUrl,
-          imagesUrl: rt.imagesUrl || [],
+          imagesUrl: rt.imagesUrl,
         }));
       setRoomTypes(residenceRoomTypes);
     }
@@ -182,6 +182,22 @@ const AdminResidences = () => {
     // Filter out empty image URLs
     const filteredImages = (roomTypeFormData.imagesUrl || []).filter((url) => url.trim() !== "");
 
+    // Validate that at least one image URL is provided
+    if (filteredImages.length === 0) {
+      toast({ title: "Error", description: "Please add at least one room image URL", variant: "destructive" });
+      return;
+    }
+
+    // Validate image URLs
+    for (const imageUrl of filteredImages) {
+      try {
+        new URL(imageUrl);
+      } catch {
+        toast({ title: "Error", description: "Please enter valid URLs for all room images", variant: "destructive" });
+        return;
+      }
+    }
+
     if (editingRoomTypeId) {
       // Update existing
       setRoomTypes((prev) =>
@@ -195,7 +211,7 @@ const AdminResidences = () => {
                 maxOccupancy: roomTypeFormData.maxOccupancy!,
                 area: roomTypeFormData.area!,
                 floorPlanUrl: roomTypeFormData.floorPlanUrl!,
-                imagesUrl: filteredImages.length > 0 ? filteredImages : undefined,
+                imagesUrl: filteredImages,
               }
             : rt
         )
@@ -211,7 +227,7 @@ const AdminResidences = () => {
         maxOccupancy: roomTypeFormData.maxOccupancy!,
         area: roomTypeFormData.area!,
         floorPlanUrl: roomTypeFormData.floorPlanUrl!,
-        imagesUrl: filteredImages.length > 0 ? filteredImages : undefined,
+        imagesUrl: filteredImages,
       };
       setRoomTypes((prev) => [...prev, newRoomType]);
     }
@@ -719,49 +735,49 @@ const AdminResidences = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Room Images</Label>
                       <div className="space-y-2">
-                        {(roomTypeFormData.imagesUrl || []).map((image, index) => (
-                          <div key={index} className="flex gap-2">
-                            <Input
-                              type="url"
-                              value={image}
-                              onChange={(e) => {
-                                const newImages = [...(roomTypeFormData.imagesUrl || [])];
-                                newImages[index] = e.target.value;
-                                setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
-                              }}
-                              placeholder="https://..."
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              onClick={() => {
-                                const newImages = (roomTypeFormData.imagesUrl || []).filter((_, i) => i !== index);
-                                setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: [...(roomTypeFormData.imagesUrl || []), ""] });
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Image URL
-                        </Button>
+                        <Label>Room Images *</Label>
+                        <div className="space-y-2">
+                          {(roomTypeFormData.imagesUrl || []).map((image, index) => (
+                            <div key={index} className="flex gap-2">
+                              <Input
+                                type="url"
+                                value={image}
+                                onChange={(e) => {
+                                  const newImages = [...(roomTypeFormData.imagesUrl || [])];
+                                  newImages[index] = e.target.value;
+                                  setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
+                                }}
+                                placeholder="https://..."
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => {
+                                  const newImages = (roomTypeFormData.imagesUrl || []).filter((_, i) => i !== index);
+                                  setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: newImages });
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setRoomTypeFormData({ ...roomTypeFormData, imagesUrl: [...(roomTypeFormData.imagesUrl || []), ""] });
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Image URL
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          At least one image URL is required
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Add multiple image URLs to display in the room slider
-                      </p>
-                    </div>
 
                     <div className="flex gap-2">
                       <Button type="button" onClick={handleAddRoomType} className="flex-1">

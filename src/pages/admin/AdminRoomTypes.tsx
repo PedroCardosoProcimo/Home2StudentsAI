@@ -97,18 +97,34 @@ const AdminRoomTypes = () => {
     // Filter out empty image URLs
     const filteredImages = (formData.imagesUrl || []).filter((url) => url.trim() !== "");
 
+    // Validate that at least one image URL is provided
+    if (filteredImages.length === 0) {
+      toast({ title: "Error", description: "Please add at least one room image URL", variant: "destructive" });
+      return;
+    }
+
+    // Validate image URLs
+    for (const imageUrl of filteredImages) {
+      try {
+        new URL(imageUrl);
+      } catch {
+        toast({ title: "Error", description: "Please enter valid URLs for all room images", variant: "destructive" });
+        return;
+      }
+    }
+
     try {
       if (selectedRoomType) {
         await updateRoomType.mutateAsync({
           id: selectedRoomType.id,
           ...formData,
-          imagesUrl: filteredImages.length > 0 ? filteredImages : undefined,
+          imagesUrl: filteredImages,
         });
         toast({ title: "Success", description: "Room type updated successfully" });
       } else {
         await createRoomType.mutateAsync({
           ...formData,
-          images: filteredImages.length > 0 ? filteredImages : undefined,
+          imagesUrl: filteredImages,
         } as Omit<RoomType, 'id' | 'createdAt' | 'updatedAt'>);
         toast({ title: "Success", description: "Room type added successfully" });
       }
@@ -306,7 +322,7 @@ const AdminRoomTypes = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Room Images</Label>
+              <Label>Room Images *</Label>
               <div className="space-y-2">
                 {(formData.imagesUrl || []).map((image, index) => (
                   <div key={index} className="flex gap-2">
@@ -345,7 +361,7 @@ const AdminRoomTypes = () => {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Add multiple image URLs to display in the room slider
+                At least one image URL is required
               </p>
             </div>
           </div>

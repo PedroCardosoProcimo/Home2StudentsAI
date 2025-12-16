@@ -135,7 +135,7 @@ const RoomDetail = () => {
               </div>
 
               {/* Room Images Slider */}
-              {roomType.imagesUrl && roomType.imagesUrl.length > 0 && (
+              {roomType.imagesUrl.length > 0 && (
                 <div>
                   <h2 className="text-xl font-heading font-semibold text-foreground mb-4">
                     Room Photos

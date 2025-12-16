@@ -26,7 +26,7 @@ export interface RoomType {
   maxOccupancy: number;
   area: number;
   floorPlanUrl: string;
-  imagesUrl?: string[];
+  imagesUrl: string[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
