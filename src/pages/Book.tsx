@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { format, addMonths } from "date-fns";
-import { CalendarIcon, CheckCircle } from "lucide-react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { format, addMonths, differenceInMonths } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,15 +34,20 @@ import { useResidences } from "@/hooks/useResidences";
 import { useCreateBooking } from "@/hooks/useCreateBooking";
 import { useRoomTypes } from "@/hooks/useRoomTypes";
 import { BookingFormData } from "@/types";
-import { toast } from "@/hooks/use-toast";
+import { BookingSuccessDialog, BookingErrorDialog } from "@/components/booking/BookingDialogs";
 
 const Book = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const preselectedResidence = searchParams.get("residence");
   const preselectedRoomType = searchParams.get("roomType");
+  
+  // Determine if fields should be locked (when navigating from RoomDetail)
+  const isLocked = !!(preselectedResidence && preselectedRoomType);
 
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [bookingId, setBookingId] = useState<string>("");
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [formData, setFormData] = useState<BookingFormData>({
     residenceId: preselectedResidence || "",
     roomTypeId: preselectedRoomType || "",
@@ -61,62 +66,90 @@ const Book = () => {
   const { data: roomTypes = [] } = useRoomTypes(formData.residenceId);
   const createBooking = useCreateBooking();
 
-  // Get selected residence
+  // Get selected residence and room type
   const selectedResidence = useMemo(
     () => residences.find((r) => r.id === formData.residenceId),
     [residences, formData.residenceId]
   );
 
+  const selectedRoomType = useMemo(
+    () => roomTypes.find((r) => r.id === formData.roomTypeId),
+    [roomTypes, formData.roomTypeId]
+  );
+
   const minStay = selectedResidence?.minStay || 1;
 
   useEffect(() => {
-    // Pre-select room type if provided in URL
-    if (preselectedRoomType && preselectedResidence) {
-      setFormData((prev) => ({
-        ...prev,
-        residenceId: preselectedResidence,
-        roomTypeId: preselectedRoomType,
-      }));
-    }
-  }, [preselectedRoomType, preselectedResidence]);
-
-  useEffect(() => {
     // Reset room type when residence changes
-    // If room type was preselected from URL, only clear it if residence was manually changed
-    if (formData.residenceId) {
-      const shouldClearRoomType = 
-        !preselectedRoomType ||
-        (preselectedResidence && formData.residenceId !== preselectedResidence); // Residence was manually changed
-      
-      if (shouldClearRoomType) {
-        setFormData((prev) => ({ ...prev, roomTypeId: "" }));
-      }
+    if (formData.residenceId && !isLocked) {
+      setFormData((prev) => ({ ...prev, roomTypeId: "" }));
     }
-  }, [formData.residenceId, preselectedRoomType, preselectedResidence]);
+  }, [formData.residenceId, isLocked]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof BookingFormData, string>> = {};
 
-    if (!formData.residenceId) newErrors.residenceId = "Please select a residence";
+    // Residence validation
+    if (!formData.residenceId) {
+      newErrors.residenceId = "Please select a residence";
+    }
+
+    // Room type validation
     if (!formData.roomTypeId) {
       newErrors.roomTypeId = "Please select a room type";
-    } else {
-      // Validate that the selected room type belongs to the selected residence
-      const selectedRoomType = roomTypes.find(rt => rt.id === formData.roomTypeId);
-      if (!selectedRoomType) {
-        newErrors.roomTypeId = "Selected room type does not belong to the selected residence";
+    }
+
+    // Date validation
+    if (!formData.checkIn) {
+      newErrors.checkIn = "Please select a check-in date";
+    }
+    if (!formData.checkOut) {
+      newErrors.checkOut = "Please select a check-out date";
+    }
+
+    // Check minimum stay requirement
+    if (formData.checkIn && formData.checkOut && selectedResidence) {
+      const monthsDiff = differenceInMonths(formData.checkOut, formData.checkIn);
+      if (monthsDiff < minStay) {
+        newErrors.checkOut = `Minimum stay is ${minStay} month${minStay > 1 ? 's' : ''}`;
       }
     }
-    if (!formData.checkIn) newErrors.checkIn = "Please select a check-in date";
-    if (!formData.checkOut) newErrors.checkOut = "Please select a check-out date";
-    if (!formData.guestName.trim()) newErrors.guestName = "Name is required";
+
+    // Name validation
+    if (!formData.guestName.trim()) {
+      newErrors.guestName = "Name is required";
+    } else if (formData.guestName.trim().length < 2) {
+      newErrors.guestName = "Name must be at least 2 characters";
+    }
+
+    // Email validation
     if (!formData.guestEmail.trim()) {
       newErrors.guestEmail = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.guestEmail)) {
-      newErrors.guestEmail = "Please enter a valid email";
+      newErrors.guestEmail = "Please enter a valid email address";
     }
-    if (!formData.guestPhone.trim()) newErrors.guestPhone = "Phone number is required";
-    if (!formData.termsAccepted) newErrors.termsAccepted = "You must accept the terms";
+
+    // Phone validation - improved to check for proper format and length
+    if (!formData.guestPhone.trim()) {
+      newErrors.guestPhone = "Phone number is required";
+    } else {
+      // Remove spaces, dashes, and parentheses for validation
+      const cleanPhone = formData.guestPhone.replace(/[\s\-()]/g, '');
+
+      // Check if it contains only digits and optional + prefix
+      if (!/^\+?\d+$/.test(cleanPhone)) {
+        newErrors.guestPhone = "Phone number must contain only digits";
+      } else if (cleanPhone.replace('+', '').length < 9) {
+        newErrors.guestPhone = "Phone number must be at least 9 digits";
+      } else if (cleanPhone.replace('+', '').length > 15) {
+        newErrors.guestPhone = "Phone number must be at most 15 digits";
+      }
+    }
+
+    // Terms validation
+    if (!formData.termsAccepted) {
+      newErrors.termsAccepted = "You must accept the terms and conditions";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -128,53 +161,26 @@ const Book = () => {
       try {
         const id = await createBooking.mutateAsync(formData);
         setBookingId(id);
-        setIsSubmitted(true);
-        toast({
-          title: "Booking Request Submitted",
-          description: `Your booking reference is ${id}. We'll get back to you within 24 hours.`,
-        });
+        setShowSuccessDialog(true);
       } catch (error) {
-        toast({
-          title: "Booking Failed",
-          description: "There was an error submitting your booking. Please try again.",
-          variant: "destructive",
-        });
+        setShowErrorDialog(true);
       }
     }
   };
 
-  if (isSubmitted) {
-    return (
-      <Layout>
-        <div className="pt-24 md:pt-28 min-h-screen">
-          <div className="container-narrow section-padding">
-            <div className="max-w-md mx-auto text-center">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-10 h-10 text-green-600" />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
-                Thank You!
-              </h1>
-              <p className="mt-4 text-muted-foreground">
-                Your booking request has been submitted successfully.
-                {bookingId && (
-                  <>
-                    <br />
-                    <span className="font-medium">Booking Reference: {bookingId.slice(0, 8).toUpperCase()}</span>
-                  </>
-                )}
-                <br />
-                Our team will review your application and get back to you within 24 hours.
-              </p>
-              <Button asChild className="mt-8">
-                <Link to="/">Back to Home</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false);
+    navigate('/');
+  };
+
+  const handleErrorDialogClose = () => {
+    setShowErrorDialog(false);
+  };
+
+  const handleRetry = () => {
+    // Form is still populated, user can just resubmit
+    // No need to do anything special here
+  };
 
   return (
     <Layout>
@@ -223,16 +229,10 @@ const Book = () => {
                       onValueChange={(value) =>
                         setFormData((prev) => ({ ...prev, residenceId: value }))
                       }
-                      disabled={!!preselectedResidence && !!preselectedRoomType}
+                      disabled={isLocked}
                     >
                       <SelectTrigger className={cn(errors.residenceId && "border-destructive")}>
-                        <SelectValue 
-                          placeholder={
-                            preselectedResidence && preselectedRoomType
-                              ? "Residence pre-selected"
-                              : "Select a residence"
-                          } 
-                        />
+                        <SelectValue placeholder="Select a residence" />
                       </SelectTrigger>
                       <SelectContent>
                         {residences.map((r) => (
@@ -242,11 +242,6 @@ const Book = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    {preselectedResidence && preselectedRoomType && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Residence pre-selected from room detail page
-                      </p>
-                    )}
                     {errors.residenceId && (
                       <p className="text-sm text-destructive mt-1">{errors.residenceId}</p>
                     )}
@@ -260,18 +255,10 @@ const Book = () => {
                       onValueChange={(value) =>
                         setFormData((prev) => ({ ...prev, roomTypeId: value }))
                       }
-                      disabled={!formData.residenceId || !!preselectedRoomType}
+                      disabled={!formData.residenceId || isLocked}
                     >
                       <SelectTrigger className={cn(errors.roomTypeId && "border-destructive")}>
-                        <SelectValue 
-                          placeholder={
-                            preselectedRoomType 
-                              ? "Room type selected" 
-                              : formData.residenceId 
-                                ? "Select a room type" 
-                                : "Select a residence first"
-                          } 
-                        />
+                        <SelectValue placeholder={formData.residenceId ? "Select a room type" : "Select a residence first"} />
                       </SelectTrigger>
                       <SelectContent>
                         {roomTypes.map((r) => (
@@ -281,11 +268,6 @@ const Book = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    {preselectedRoomType && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Room type pre-selected from room detail page
-                      </p>
-                    )}
                     {errors.roomTypeId && (
                       <p className="text-sm text-destructive mt-1">{errors.roomTypeId}</p>
                     )}
@@ -488,6 +470,23 @@ const Book = () => {
           </form>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      <BookingSuccessDialog
+        open={showSuccessDialog}
+        onClose={handleSuccessDialogClose}
+        bookingReference={bookingId.slice(0, 8).toUpperCase()}
+        bookingData={formData}
+        residenceName={selectedResidence?.name}
+        roomTypeName={selectedRoomType?.name}
+      />
+
+      {/* Error Dialog */}
+      <BookingErrorDialog
+        open={showErrorDialog}
+        onClose={handleErrorDialogClose}
+        onRetry={handleRetry}
+      />
     </Layout>
   );
 };

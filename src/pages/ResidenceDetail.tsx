@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { MapPin, Users, Wifi, Dumbbell, Book, Home, Shirt, UtensilsCrossed, Wind, Flame, Armchair, Shield, PawPrint, Car, Music } from "lucide-react";
+import { MapPin, Users, Wifi, Dumbbell, Book, Home, Shield, UtensilsCrossed, Shirt, Car, Wind, Flame, Armchair, PawPrint } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,16 +17,15 @@ import { ResidenceCardSkeleton } from "@/components/residences/ResidenceCardSkel
 const amenityIcons: { [key: string]: React.ElementType } = {
   "High-Speed WiFi": Wifi,
   "Kitchen": UtensilsCrossed,
-  "Gym": Dumbbell,
-  "Study Room": Book,
   "Laundry": Shirt,
+  "Study Room": Book,
+  "Gym": Dumbbell,
+  "Parking": Car,
   "Air Conditioning": Wind,
   "Heating": Flame,
   "Furnished": Armchair,
   "24/7 Security": Shield,
   "Pet Friendly": PawPrint,
-  "Parking": Car,
-  "Music Room": Music,
 };
 
 const ResidenceDetail = () => {
