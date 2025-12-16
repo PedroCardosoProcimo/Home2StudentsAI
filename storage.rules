@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is an admin
+    function isAdmin() {
+      return isAuthenticated() &&
+             request.auth.token.email != null;
+    }
+
+    // Regulations storage rules
+    match /regulations/{residenceId}/{regulationId}.pdf {
+      // Anyone authenticated can read (download) regulation PDFs
+      allow read: if isAuthenticated();
+
+      // Only admins can upload regulation PDFs
+      allow write: if isAdmin() &&
+                     request.resource.size <= 10 * 1024 * 1024 &&
+                     request.resource.contentType == 'application/pdf';
+
+      // Only admins can delete regulation PDFs
+      allow delete: if isAdmin();
+    }
+
+    // Residence images (if you have these)
+    match /residences/{residenceId}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Default: deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

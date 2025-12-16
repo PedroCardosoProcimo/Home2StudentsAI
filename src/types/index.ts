@@ -81,3 +81,6 @@ export interface AdminUser {
   email: string;
   isAuthenticated: boolean;
 }
+
+// Re-export regulation types
+export type { Regulation, CreateRegulationInput, UpdateRegulationInput } from './regulation';

@@ -1,0 +1,86 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is an admin
+    function isAdmin() {
+      return isAuthenticated() &&
+             request.auth.token.email != null;
+    }
+
+    // Regulations collection rules
+    match /regulations/{regulationId} {
+      // Anyone authenticated can read regulations
+      allow read: if isAuthenticated();
+
+      // Only admins can create regulations
+      allow create: if isAdmin() &&
+                      request.resource.data.keys().hasAll([
+                        'residenceId', 'version', 'fileName',
+                        'fileUrl', 'filePath', 'fileSize',
+                        'isActive', 'publishedAt', 'createdAt',
+                        'createdBy', 'updatedAt'
+                      ]) &&
+                      request.resource.data.version is string &&
+                      request.resource.data.version.size() > 0 &&
+                      request.resource.data.fileSize > 0 &&
+                      request.resource.data.fileSize <= 10485760;
+
+      // Only admins can update regulations
+      allow update: if isAdmin();
+
+      // Only admins can delete regulations
+      allow delete: if isAdmin();
+    }
+
+    // Residences collection rules
+    match /residences/{residenceId} {
+      // Anyone can read residences
+      allow read: if true;
+
+      // Only admins can write
+      allow write: if isAdmin();
+    }
+
+    // Room types collection rules
+    match /roomTypes/{roomTypeId} {
+      // Anyone can read room types
+      allow read: if true;
+
+      // Only admins can write
+      allow write: if isAdmin();
+    }
+
+    // Bookings collection rules
+    match /bookings/{bookingId} {
+      // Users can read their own bookings, admins can read all
+      allow read: if isAuthenticated();
+
+      // Anyone can create a booking (for public booking form)
+      allow create: if true;
+
+      // Only admins can update/delete bookings
+      allow update, delete: if isAdmin();
+    }
+
+    // Settings collection rules
+    match /settings/{document} {
+      // Anyone can read settings
+      allow read: if true;
+
+      // Only admins can update settings
+      allow write: if isAdmin();
+    }
+
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

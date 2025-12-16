@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Plus, Search, Pencil, Trash2, Loader2, AlertCircle, X } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Loader2, AlertCircle, X, FileText } from "lucide-react";
 import { useConfig } from "@/hooks/useConfig";
 import { Residence, RoomType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ interface TempRoomType {
 }
 
 const AdminResidences = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { data: residences = [], isLoading: residencesLoading } = useAdminResidences();
   const { data: allRoomTypes = [] } = useAdminRoomTypes();
@@ -510,6 +512,14 @@ const AdminResidences = () => {
                     <StatusBadge status={residence.active ? "active" : "inactive"} />
                   </TableCell>
                   <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/admin/residences/${residence.id}/regulations`)}
+                      title="Manage Regulations"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEditModal(residence)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
