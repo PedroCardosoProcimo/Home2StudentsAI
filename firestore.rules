@@ -14,6 +14,11 @@ service cloud.firestore {
              request.auth.token.email != null;
     }
 
+    // Helper function to check if user is accessing their own student data
+    function isOwnStudent(studentId) {
+      return isAuthenticated() && request.auth.uid == studentId;
+    }
+
     // Regulations collection rules
     match /regulations/{regulationId} {
       // Anyone authenticated can read regulations
@@ -94,6 +99,43 @@ service cloud.firestore {
 
       // Only admins can update settings
       allow write: if isAdmin();
+    }
+
+    // Students collection rules
+    match /students/{studentId} {
+      // Students can read their own data, admins can read all
+      allow read: if isOwnStudent(studentId) || isAdmin();
+
+      // Authenticated users can create students (admin creating via secondary auth)
+      allow create: if isAuthenticated() &&
+                      request.resource.data.keys().hasAll([
+                        'email', 'name', 'phone', 'residenceId',
+                        'bookingId', 'createdAt', 'updatedAt'
+                      ]);
+
+      // Students can update their own profile data
+      allow update: if isOwnStudent(studentId);
+
+      // Only admins can delete students
+      allow delete: if isAdmin();
+    }
+
+    // Regulation acceptances collection rules
+    match /regulation_acceptances/{acceptanceId} {
+      // Students can read their own acceptances, admins can read all
+      allow read: if isAuthenticated() &&
+                    (request.auth.uid == resource.data.studentId || isAdmin());
+
+      // Students can create their own acceptances
+      allow create: if isAuthenticated() &&
+                      request.auth.uid == request.resource.data.studentId &&
+                      request.resource.data.keys().hasAll([
+                        'studentId', 'regulationId', 'regulationVersion',
+                        'residenceId', 'acceptedAt'
+                      ]);
+
+      // Acceptances are immutable - no updates or deletes allowed
+      allow update, delete: if false;
     }
 
     // Default: deny all other access

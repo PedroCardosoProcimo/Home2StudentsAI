@@ -15,8 +15,13 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
+// Initialize secondary app for student account creation
+// This allows creating student accounts without logging out the admin
+const secondaryApp = initializeApp(firebaseConfig, 'secondary');
+
 // Initialize services
-export const auth = getAuth(app);
+export const auth = getAuth(app); // Primary auth (admin/student login)
+export const secondaryAuth = getAuth(secondaryApp); // Secondary auth (student creation only)
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 

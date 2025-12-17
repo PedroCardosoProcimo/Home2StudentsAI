@@ -42,8 +42,30 @@ export interface Booking {
   guestPhone: string;
   notes?: string;
   status: 'pending' | 'approved' | 'rejected';
+  studentId?: string; // Link to student account (set when booking approved)
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+export interface Student {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  residenceId: string;
+  bookingId: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface RegulationAcceptance {
+  id: string;
+  studentId: string;
+  regulationId: string;
+  regulationVersion: string;
+  residenceId: string;
+  acceptedAt: Timestamp;
+  ipAddress?: string; // Optional: track IP for legal compliance
 }
 
 export interface Settings {

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/frontend/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminAuthProvider } from "@/frontend/contexts/AdminAuthContext";
+import { StudentAuthProvider } from "@/frontend/contexts/StudentAuthContext";
 
 // Public pages
 import Index from "./pages/Index";
@@ -25,6 +26,11 @@ import AdminRoomTypes from "./pages/admin/AdminRoomTypes";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminSettings from "./pages/admin/AdminSettings";
 
+// Student pages
+import StudentLogin from "./pages/StudentLogin";
+import StudentPortal from "./pages/StudentPortal";
+import { StudentPortalGuard } from "./components/guards/StudentPortalGuard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -34,29 +40,42 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AdminAuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/residences" element={<Residences />} />
-            <Route path="/residences/:id/rooms/:roomId" element={<RoomDetail />} />
-            <Route path="/residences/:id" element={<ResidenceDetail />} />
-            <Route path="/book" element={<Book />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
+          <StudentAuthProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/residences" element={<Residences />} />
+              <Route path="/residences/:id/rooms/:roomId" element={<RoomDetail />} />
+              <Route path="/residences/:id" element={<ResidenceDetail />} />
+              <Route path="/book" element={<Book />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
 
-            {/* Admin routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="residences" element={<AdminResidences />} />
-              <Route path="residences/:id/regulations" element={<AdminRegulations />} />
-              <Route path="room-types" element={<AdminRoomTypes />} />
-              <Route path="bookings" element={<AdminBookings />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
+              {/* Admin routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="residences" element={<AdminResidences />} />
+                <Route path="residences/:id/regulations" element={<AdminRegulations />} />
+                <Route path="room-types" element={<AdminRoomTypes />} />
+                <Route path="bookings" element={<AdminBookings />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* Student routes */}
+              <Route path="/student/login" element={<StudentLogin />} />
+              <Route
+                path="/student/portal"
+                element={
+                  <StudentPortalGuard>
+                    <StudentPortal />
+                  </StudentPortalGuard>
+                }
+              />
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </StudentAuthProvider>
         </AdminAuthProvider>
       </BrowserRouter>
     </TooltipProvider>

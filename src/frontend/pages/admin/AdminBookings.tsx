@@ -7,13 +7,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/frontend/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/frontend/components/ui/alert-dialog";
 import { StatusBadge } from "@/frontend/components/admin/StatusBadge";
+import { StudentCredentialsModal } from "@/frontend/components/admin/StudentCredentialsModal";
 import { Search, Eye, Check, X, Loader2 } from "lucide-react";
 import { Booking } from "@/shared/types";
 import { useToast } from "@/backend/hooks/use-toast";
 import { format, differenceInMonths } from "date-fns";
-import { useAdminBookings, useUpdateBookingStatus } from "@/backend/hooks/admin/useAdminBookings";
+import { useAdminBookings, useUpdateBookingStatus, useApproveBookingWithStudent } from "@/backend/hooks/admin/useAdminBookings";
 import { useAdminResidences } from "@/backend/hooks/admin/useAdminResidences";
 import { useAdminRoomTypes } from "@/backend/hooks/admin/useAdminRoomTypes";
+import { generateSecurePassword } from "@/backend/utils/passwordGenerator";
 
 const AdminBookings = () => {
   const { toast } = useToast();
@@ -21,6 +23,7 @@ const AdminBookings = () => {
   const { data: residences = [], isLoading: residencesLoading } = useAdminResidences();
   const { data: roomTypes = [], isLoading: roomTypesLoading } = useAdminRoomTypes();
   const updateBookingStatus = useUpdateBookingStatus();
+  const approveWithStudent = useApproveBookingWithStudent();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -28,6 +31,14 @@ const AdminBookings = () => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
+
+  // Student credentials modal state
+  const [credentialsModalOpen, setCredentialsModalOpen] = useState(false);
+  const [studentCredentials, setStudentCredentials] = useState<{
+    email: string;
+    password: string;
+    name: string;
+  } | null>(null);
 
   const filteredBookings = bookings.filter((b) => {
     const matchesSearch =
@@ -52,22 +63,48 @@ const AdminBookings = () => {
     if (!selectedBooking || !actionType) return;
 
     try {
-      await updateBookingStatus.mutateAsync({
-        id: selectedBooking.id,
-        status: actionType === "approve" ? "approved" : "rejected"
-      });
+      if (actionType === "approve") {
+        // Generate secure password for student account
+        const password = generateSecurePassword(16);
 
-      toast({
-        title: "Success",
-        description: `Booking ${actionType === "approve" ? "approved" : "rejected"} successfully`,
-      });
+        // Create student account and approve booking
+        const result = await approveWithStudent.mutateAsync({
+          booking: selectedBooking,
+          password: password,
+        });
+
+        // Show credentials modal to admin
+        setStudentCredentials({
+          email: result.email,
+          password: result.password,
+          name: selectedBooking.guestName,
+        });
+        setCredentialsModalOpen(true);
+
+        toast({
+          title: "Success",
+          description: "Booking approved and student account created",
+        });
+      } else {
+        // Reject booking (no student creation)
+        await updateBookingStatus.mutateAsync({
+          id: selectedBooking.id,
+          status: "rejected"
+        });
+
+        toast({
+          title: "Success",
+          description: "Booking rejected",
+        });
+      }
 
       setIsConfirmDialogOpen(false);
       setIsDetailModalOpen(false);
-    } catch (err) {
+    } catch (err: any) {
+      const errorMessage = err.message || "Failed to process booking. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to update booking status. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -274,28 +311,47 @@ const AdminBookings = () => {
               {actionType === "approve" ? "Approve Booking" : "Reject Booking"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to {actionType} this booking from {selectedBooking?.guestName}?
+              {actionType === "approve"
+                ? `Approving this booking will create a student account for ${selectedBooking?.guestName}. Are you sure?`
+                : `Are you sure you want to reject this booking from ${selectedBooking?.guestName}?`
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={updateBookingStatus.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={updateBookingStatus.isPending || approveWithStudent.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleStatusChange}
-              disabled={updateBookingStatus.isPending}
+              disabled={updateBookingStatus.isPending || approveWithStudent.isPending}
               className={actionType === "reject" ? "bg-destructive hover:bg-destructive/90" : ""}
             >
-              {updateBookingStatus.isPending ? (
+              {(updateBookingStatus.isPending || approveWithStudent.isPending) ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {actionType === "approve" ? "Approving..." : "Rejecting..."}
+                  {actionType === "approve" ? "Creating Account..." : "Rejecting..."}
                 </>
               ) : (
-                actionType === "approve" ? "Approve" : "Reject"
+                actionType === "approve" ? "Approve & Create Account" : "Reject"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Student Credentials Modal */}
+      {studentCredentials && (
+        <StudentCredentialsModal
+          open={credentialsModalOpen}
+          onClose={() => {
+            setCredentialsModalOpen(false);
+            setStudentCredentials(null);
+          }}
+          email={studentCredentials.email}
+          password={studentCredentials.password}
+          studentName={studentCredentials.name}
+        />
+      )}
     </div>
   );
 };
