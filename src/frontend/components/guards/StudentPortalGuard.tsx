@@ -25,6 +25,7 @@ export const StudentPortalGuard = ({ children }: StudentPortalGuardProps) => {
   const {
     data: acceptanceCheck,
     isLoading: acceptanceLoading,
+    error: acceptanceError,
   } = useRegulationAcceptanceCheck(user?.uid, student?.residenceId);
 
   // Mutation for recording acceptance
@@ -63,15 +64,38 @@ export const StudentPortalGuard = ({ children }: StudentPortalGuardProps) => {
     );
   }
 
+  // Error state - show if there's an acceptance check error
+  if (acceptanceError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-bold text-destructive mb-2">Error Loading Regulations</h2>
+          <p className="text-muted-foreground mb-4">
+            {acceptanceError instanceof Error ? acceptanceError.message : 'Unknown error occurred'}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Residence ID: {student?.residenceId || 'N/A'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // No active regulation - error state (shouldn't happen)
   if (!acceptanceCheck?.regulation) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <h2 className="text-2xl font-bold mb-2">No Active Regulations</h2>
-          <p className="text-muted-foreground">
-            No regulations found for your residence. Please contact support.
+          <p className="text-muted-foreground mb-4">
+            No active regulations found for your residence. Please contact support.
           </p>
+          <div className="bg-muted p-4 rounded-lg text-sm text-left">
+            <p><strong>Debug Info:</strong></p>
+            <p>Student ID: {user?.uid}</p>
+            <p>Residence ID: {student?.residenceId || 'Not set'}</p>
+            <p>Student Email: {student?.email}</p>
+          </div>
         </div>
       </div>
     );
@@ -90,7 +114,9 @@ export const StudentPortalGuard = ({ children }: StudentPortalGuardProps) => {
 
         toast({
           title: "Regulations Accepted",
-          description: "Welcome to your student portal!",
+          description: acceptanceCheck.isReAcceptance
+            ? "Thank you for accepting the updated regulations!"
+            : "Welcome to your student portal!",
         });
       } catch (error) {
         toast({
@@ -106,6 +132,8 @@ export const StudentPortalGuard = ({ children }: StudentPortalGuardProps) => {
         regulation={acceptanceCheck.regulation}
         onAccept={handleAccept}
         isAccepting={recordAcceptance.isPending}
+        previousAcceptance={acceptanceCheck.previousAcceptance}
+        isReAcceptance={acceptanceCheck.isReAcceptance}
       />
     );
   }

@@ -99,3 +99,33 @@ export const getRegulationAcceptances = async (
     ...doc.data(),
   })) as RegulationAcceptance[];
 };
+
+/**
+ * Get the most recent acceptance for a student in a specific residence
+ * Used to detect re-acceptance scenarios when regulations are updated
+ *
+ * @returns The latest acceptance or null if no previous acceptances exist
+ */
+export const getLatestAcceptanceForResidence = async (
+  studentId: string,
+  residenceId: string
+): Promise<RegulationAcceptance | null> => {
+  const q = query(
+    collection(db, REGULATION_ACCEPTANCES_COLLECTION),
+    where('studentId', '==', studentId),
+    where('residenceId', '==', residenceId),
+    orderBy('acceptedAt', 'desc')
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const doc = snapshot.docs[0];
+  return {
+    id: doc.id,
+    ...doc.data(),
+  } as RegulationAcceptance;
+};

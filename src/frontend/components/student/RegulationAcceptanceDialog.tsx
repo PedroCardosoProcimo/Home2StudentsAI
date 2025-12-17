@@ -10,19 +10,24 @@ import {
 import { Button } from "@/frontend/components/ui/button";
 import { Checkbox } from "@/frontend/components/ui/checkbox";
 import { Label } from "@/frontend/components/ui/label";
-import { Loader2, FileText } from "lucide-react";
-import { Regulation } from "@/shared/types";
+import { Alert, AlertDescription } from "@/frontend/components/ui/alert";
+import { Loader2, FileText, AlertCircle } from "lucide-react";
+import { Regulation, RegulationAcceptance } from "@/shared/types";
 
 interface RegulationAcceptanceDialogProps {
   regulation: Regulation;
   onAccept: () => Promise<void>;
   isAccepting: boolean;
+  previousAcceptance?: RegulationAcceptance | null;
+  isReAcceptance?: boolean;
 }
 
 export const RegulationAcceptanceDialog = ({
   regulation,
   onAccept,
   isAccepting,
+  previousAcceptance,
+  isReAcceptance = false,
 }: RegulationAcceptanceDialogProps) => {
   const [hasRead, setHasRead] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -31,6 +36,11 @@ export const RegulationAcceptanceDialog = ({
     if (!hasRead || !agreed) return;
     await onAccept();
   };
+
+  // Format the previous acceptance date if it exists
+  const previousAcceptanceDate = previousAcceptance?.acceptedAt
+    ? new Date(previousAcceptance.acceptedAt.seconds * 1000).toLocaleDateString()
+    : null;
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
@@ -41,13 +51,30 @@ export const RegulationAcceptanceDialog = ({
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Residence Regulations</DialogTitle>
+          <DialogTitle>
+            {isReAcceptance ? "Updated Regulations" : "Residence Regulations"}
+          </DialogTitle>
           <DialogDescription>
-            Please review and accept the residence regulations to continue.
+            {isReAcceptance
+              ? "The residence regulations have been updated. Please review and accept the new version to continue."
+              : "Please review and accept the residence regulations to continue."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Re-acceptance Alert Banner */}
+          {isReAcceptance && previousAcceptance && (
+            <Alert variant="default" className="border-amber-200 bg-amber-50">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                <strong>Regulations Updated:</strong> You previously accepted version{" "}
+                {previousAcceptance.regulationVersion} on {previousAcceptanceDate}.
+                The regulations have been updated to version {regulation.version}.
+                Please review the new version and accept to continue using the portal.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* PDF Viewer */}
           <div className="border rounded-lg overflow-hidden bg-muted">
             <div className="h-[500px] w-full">

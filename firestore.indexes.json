@@ -8,6 +8,22 @@
       ]
     },
     {
+      "collectionGroup": "regulations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "residenceId", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "regulations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "residenceId", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "regulation_acceptances",
       "queryScope": "COLLECTION",
       "fields": [
@@ -21,6 +37,15 @@
       "fields": [
         { "fieldPath": "studentId", "order": "ASCENDING" },
         { "fieldPath": "regulationId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "regulation_acceptances",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "studentId", "order": "ASCENDING" },
+        { "fieldPath": "residenceId", "order": "ASCENDING" },
+        { "fieldPath": "acceptedAt", "order": "DESCENDING" }
       ]
     }
   ],

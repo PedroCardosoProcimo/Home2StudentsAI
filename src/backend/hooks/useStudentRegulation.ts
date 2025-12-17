@@ -3,12 +3,14 @@ import {
   hasAcceptedRegulation,
   recordRegulationAcceptance,
   getStudentAcceptanceHistory,
+  getLatestAcceptanceForResidence,
 } from '@/backend/services/regulationAcceptance';
 import { getActiveRegulation } from '@/backend/services/regulations';
 
 /**
  * Hook to check if student has accepted the current active regulation
- * Returns both the regulation and acceptance status
+ * Returns regulation, acceptance status, and previous acceptance if exists
+ * Used to detect re-acceptance scenarios when regulations are updated
  */
 export const useRegulationAcceptanceCheck = (
   studentId: string | undefined,
@@ -17,7 +19,9 @@ export const useRegulationAcceptanceCheck = (
   return useQuery({
     queryKey: ['regulation-acceptance', studentId, residenceId],
     queryFn: async () => {
-      if (!studentId || !residenceId) return null;
+      if (!studentId || !residenceId) {
+        return null;
+      }
 
       // Get active regulation for the residence
       const activeRegulation = await getActiveRegulation(residenceId);
@@ -32,9 +36,17 @@ export const useRegulationAcceptanceCheck = (
         activeRegulation.id
       );
 
+      // Get the latest acceptance for this residence (for re-acceptance detection)
+      const previousAcceptance = await getLatestAcceptanceForResidence(
+        studentId,
+        residenceId
+      );
+
       return {
         regulation: activeRegulation,
         hasAccepted,
+        previousAcceptance, // Will be non-null if student previously accepted a regulation
+        isReAcceptance: previousAcceptance !== null && !hasAccepted,
       };
     },
     enabled: !!studentId && !!residenceId,
