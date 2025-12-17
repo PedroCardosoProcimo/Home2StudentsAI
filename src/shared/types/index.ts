@@ -114,3 +114,9 @@ export type {
   CreateAuditLogInput,
   AuditLogFilters,
 } from './regulation';
+
+// Re-export acceptance status types
+export type {
+  StudentAcceptanceStatus,
+  AcceptanceStatusSummary,
+} from './acceptanceStatus';

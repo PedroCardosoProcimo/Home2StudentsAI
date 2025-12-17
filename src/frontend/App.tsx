@@ -25,6 +25,7 @@ import AdminRegulations from "./pages/admin/AdminRegulations";
 import AdminRoomTypes from "./pages/admin/AdminRoomTypes";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AcceptanceStatusDashboard from "./pages/admin/AcceptanceStatusDashboard";
 
 // Student pages
 import StudentLogin from "./pages/StudentLogin";
@@ -59,6 +60,7 @@ const App = () => (
                 <Route path="residences/:id/regulations" element={<AdminRegulations />} />
                 <Route path="room-types" element={<AdminRoomTypes />} />
                 <Route path="bookings" element={<AdminBookings />} />
+                <Route path="acceptance-status" element={<AcceptanceStatusDashboard />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
 

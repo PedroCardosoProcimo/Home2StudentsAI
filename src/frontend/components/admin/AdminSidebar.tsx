@@ -1,13 +1,14 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Building2, 
-  BedDouble, 
-  CalendarCheck, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Building2,
+  BedDouble,
+  CalendarCheck,
+  Settings,
   LogOut,
   Menu,
-  X
+  X,
+  CheckCircle2
 } from "lucide-react";
 import { cn } from "@/frontend/lib/utils";
 import { useAdminAuth } from "@/frontend/contexts/AdminAuthContext";
@@ -19,6 +20,7 @@ const navItems = [
   { to: "/admin/residences", icon: Building2, label: "Residences" },
   { to: "/admin/room-types", icon: BedDouble, label: "Room Types" },
   { to: "/admin/bookings", icon: CalendarCheck, label: "Bookings" },
+  { to: "/admin/acceptance-status", icon: CheckCircle2, label: "Acceptance Status" },
   { to: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 

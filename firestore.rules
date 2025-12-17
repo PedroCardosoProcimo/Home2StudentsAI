@@ -138,6 +138,16 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Admins collection rules
+    match /admins/{adminId} {
+      // Any authenticated user can check if a specific user is an admin
+      // This allows AdminGuard to verify admin status
+      allow read: if isAuthenticated();
+
+      // Only existing admins can create/update/delete admin records
+      allow write: if isAdmin();
+    }
+
     // Default: deny all other access
     match /{document=**} {
       allow read, write: if false;
