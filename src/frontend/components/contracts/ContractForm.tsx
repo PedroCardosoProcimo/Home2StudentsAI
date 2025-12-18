@@ -83,6 +83,7 @@ export function ContractForm({
   const [selectedStudent, setSelectedStudent] = React.useState<StudentWithUser | null>(null);
   const [isLoadingStudentData, setIsLoadingStudentData] = React.useState(false);
   const [pendingRoomTypeId, setPendingRoomTypeId] = React.useState<string | null>(null);
+  const [hasAutoFilled, setHasAutoFilled] = React.useState(false);
 
   // Hooks that don't depend on form
   const { data: residences = [] } = useResidences(false);
@@ -194,6 +195,9 @@ export function ContractForm({
         form.setValue("monthlyValue", roomType.basePrice);
         form.setValue("contactEmail", studentData.email);
         form.setValue("contactPhone", studentData.phone);
+
+        // Mark as auto-filled to lock residence and room type
+        setHasAutoFilled(true);
 
         toast({
           title: "Auto-filled",
@@ -329,7 +333,7 @@ export function ContractForm({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={isEditMode || isLoadingStudentData}
+                    disabled={isEditMode || isLoadingStudentData || hasAutoFilled}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -360,7 +364,7 @@ export function ContractForm({
                     onValueChange={field.onChange}
                     value={field.value}
                     disabled={
-                      !selectedResidenceId || isEditMode || isLoadingStudentData
+                      !selectedResidenceId || isEditMode || isLoadingStudentData || hasAutoFilled
                     }
                   >
                     <FormControl>
@@ -513,7 +517,8 @@ export function ContractForm({
                     <Input
                       type="number"
                       step="0.01"
-                      {...field}
+                      placeholder="0"
+                      value={field.value || ""}
                       onChange={(e) =>
                         field.onChange(parseFloat(e.target.value) || 0)
                       }
@@ -536,7 +541,8 @@ export function ContractForm({
                     <Input
                       type="number"
                       step="1"
-                      {...field}
+                      placeholder="0"
+                      value={field.value || ""}
                       onChange={(e) =>
                         field.onChange(parseFloat(e.target.value) || 0)
                       }

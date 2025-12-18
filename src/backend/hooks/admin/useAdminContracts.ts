@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import type { ContractFilters } from '@/shared/types';
 import {
   getContracts,
@@ -15,6 +15,7 @@ export const useAdminContracts = (filters: ContractFilters = {}) => {
     queryKey: ['admin', 'contracts', filters],
     queryFn: () => getContracts(filters),
     staleTime: 30000, // Consider data fresh for 30 seconds
+    placeholderData: keepPreviousData, // Keep previous results while fetching new ones
   });
 };
 

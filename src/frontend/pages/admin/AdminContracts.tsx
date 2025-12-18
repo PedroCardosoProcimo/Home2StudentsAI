@@ -93,7 +93,7 @@ const AdminContracts = () => {
   }, [residenceFilter, statusFilter, debouncedSearch]);
 
   // Fetch all contracts
-  const { data: allContracts = [], isLoading: contractsLoading, error: contractsError } = useAdminContracts(filters);
+  const { data: allContracts = [], isLoading: contractsLoading, error: contractsError, isFetching } = useAdminContracts(filters);
 
   // Apply client-side pagination
   const totalCount = allContracts.length;
@@ -231,8 +231,11 @@ const AdminContracts = () => {
             placeholder="Search by student name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 pr-10"
           />
+          {isFetching && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          )}
         </div>
       </div>
 
