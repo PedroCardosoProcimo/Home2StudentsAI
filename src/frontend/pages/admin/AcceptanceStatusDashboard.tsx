@@ -22,9 +22,10 @@ import {
 } from "@/frontend/components/ui/table";
 import { Loader2, CheckCircle2, Clock, Users, FileText, AlertCircle } from "lucide-react";
 import type { StudentAcceptanceStatus } from "@/shared/types";
+import { Timestamp } from "firebase/firestore";
 
 type StatusFilter = "all" | "accepted" | "pending";
-type SortField = "studentName" | "studentEmail" | "roomNumber" | "status" | "acceptedAt";
+type SortField = "studentName" | "studentEmail" | "residenceName" | "status" | "acceptedAt";
 type SortDirection = "asc" | "desc";
 
 const AcceptanceStatusDashboard = () => {
@@ -86,8 +87,8 @@ const AcceptanceStatusDashboard = () => {
         case "studentEmail":
           comparison = a.studentEmail.localeCompare(b.studentEmail);
           break;
-        case "roomNumber":
-          comparison = a.roomNumber.localeCompare(b.roomNumber);
+        case "residenceName":
+          comparison = a.residenceName.localeCompare(b.residenceName);
           break;
         case "status":
           comparison = a.status.localeCompare(b.status);
@@ -120,7 +121,7 @@ const AcceptanceStatusDashboard = () => {
   }, [statusFilter, searchQuery, selectedResidenceId]);
 
   // Format date
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: Timestamp) => {
     if (!timestamp) return "-";
     const date = new Date(timestamp.seconds * 1000);
     return date.toLocaleDateString();
@@ -336,9 +337,9 @@ const AcceptanceStatusDashboard = () => {
                             </TableHead>
                             <TableHead
                               className="cursor-pointer hover:bg-muted"
-                              onClick={() => handleSort("roomNumber")}
+                              onClick={() => handleSort("residenceName")}
                             >
-                              Room {sortField === "roomNumber" && (sortDirection === "asc" ? "↑" : "↓")}
+                              Residence {sortField === "residenceName" && (sortDirection === "asc" ? "↑" : "↓")}
                             </TableHead>
                             <TableHead
                               className="cursor-pointer hover:bg-muted"
@@ -359,7 +360,7 @@ const AcceptanceStatusDashboard = () => {
                             <TableRow key={student.studentId}>
                               <TableCell className="font-medium">{student.studentName}</TableCell>
                               <TableCell>{student.studentEmail}</TableCell>
-                              <TableCell>{student.roomNumber}</TableCell>
+                              <TableCell>{student.residenceName}</TableCell>
                               <TableCell>
                                 {student.status === "accepted" ? (
                                   <Badge variant="default" className="bg-green-600 hover:bg-green-700">

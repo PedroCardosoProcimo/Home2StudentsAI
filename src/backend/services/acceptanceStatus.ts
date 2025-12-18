@@ -99,7 +99,7 @@ export const getAcceptanceStatusByResidence = async (
 
       // Contract info (optional - may not exist yet)
       contractId: contract?.id,
-      roomNumber: contract?.roomTypeName || 'N/A',
+      residenceName: contract?.residenceName || residence.name,
       contractStartDate: contract?.startDate,
       contractEndDate: contract?.endDate,
 

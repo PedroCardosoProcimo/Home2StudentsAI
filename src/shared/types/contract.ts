@@ -51,11 +51,10 @@ export interface Contract {
 /**
  * Input data for creating a new contract
  * Uses Date instead of Timestamp for easier form handling
+ * residenceId and roomTypeId are fetched from the student (via their booking)
  */
 export interface CreateContractInput {
   studentId: string;
-  residenceId: string;
-  roomTypeId: string;
   startDate: Date;
   endDate: Date;
   monthlyValue: number;

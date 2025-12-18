@@ -16,6 +16,7 @@ import type {
   CreateContractInput,
   UpdateContractInput,
   ContractFilters,
+  Booking,
 } from '@/shared/types';
 import { getStudentWithUser } from './students';
 import { getResidenceById, getRoomTypeById } from './residences';
@@ -45,10 +46,22 @@ export const createContract = async (
     throw new Error('Monthly kWh limit must be positive');
   }
 
+  // Get student data (contains residenceId and bookingId)
+  const student = await getStudentWithUser(data.studentId);
+  if (!student) {
+    throw new Error('Student not found');
+  }
+
+  // Get residenceId from student
+  const residenceId = student.residenceId;
+  if (!residenceId) {
+    throw new Error('Student does not have a residence assigned');
+  }
+
   // Check for duplicate active contract
   const existingContract = await hasActiveContract(
     data.studentId,
-    data.residenceId
+    residenceId
   );
 
   if (existingContract) {
@@ -57,20 +70,33 @@ export const createContract = async (
     );
   }
 
-  // Denormalize student data
-  const student = await getStudentWithUser(data.studentId);
-  if (!student) {
-    throw new Error('Student not found');
+  // Get booking to fetch roomTypeId
+  if (!student.bookingId) {
+    throw new Error('Student does not have a booking assigned');
+  }
+
+  const bookingDoc = await getDoc(doc(db, 'bookings', student.bookingId));
+  if (!bookingDoc.exists()) {
+    throw new Error('Student booking not found');
+  }
+
+  const booking = {
+    id: bookingDoc.id,
+    ...bookingDoc.data(),
+  } as Booking;
+
+  if (!booking.roomTypeId) {
+    throw new Error('Booking does not have a room type assigned');
   }
 
   // Denormalize residence data
-  const residence = await getResidenceById(data.residenceId);
+  const residence = await getResidenceById(residenceId);
   if (!residence) {
     throw new Error('Residence not found');
   }
 
   // Denormalize room type data
-  const roomType = await getRoomTypeById(data.roomTypeId);
+  const roomType = await getRoomTypeById(booking.roomTypeId);
   if (!roomType) {
     throw new Error('Room type not found');
   }
@@ -82,9 +108,9 @@ export const createContract = async (
     studentId: data.studentId,
     studentName: student.name,
     studentEmail: student.email,
-    residenceId: data.residenceId,
+    residenceId: residenceId,
     residenceName: residence.name,
-    roomTypeId: data.roomTypeId,
+    roomTypeId: booking.roomTypeId,
     roomTypeName: roomType.name,
     startDate: Timestamp.fromDate(data.startDate),
     endDate: Timestamp.fromDate(data.endDate),

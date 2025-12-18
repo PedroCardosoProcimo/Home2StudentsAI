@@ -8,7 +8,7 @@ export interface StudentAcceptanceStatus {
 
   // Contract info (optional - students may not have contracts yet)
   contractId?: string;
-  roomNumber: string; // roomTypeName from contract, or 'N/A' if no contract
+  residenceName: string; // residence name from contract or student, or 'N/A' if no contract
   contractStartDate?: Timestamp;
   contractEndDate?: Timestamp;
 
