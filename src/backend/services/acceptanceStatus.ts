@@ -1,6 +1,6 @@
 import { getActiveRegulation } from './regulations';
-import { getActiveContractsByResidence } from './contracts';
-import { getStudentWithUser } from './students';
+import { getActiveContractByStudent } from './contracts';
+import { getStudentsByResidence } from './students';
 import { getResidenceById } from './residences';
 import type {
   AcceptanceStatusSummary,
@@ -45,11 +45,11 @@ export const getAcceptanceStatusByResidence = async (
     };
   }
 
-  // Get all active contracts for the residence
-  const contracts = await getActiveContractsByResidence(residenceId);
+  // Get all students for the residence
+  const students = await getStudentsByResidence(residenceId);
 
-  // If no contracts, return summary with regulation info but no students
-  if (contracts.length === 0) {
+  // If no students, return summary with regulation info but no students
+  if (students.length === 0) {
     return {
       residenceId,
       residenceName: residence.name,
@@ -81,24 +81,15 @@ export const getAcceptanceStatusByResidence = async (
     });
   });
 
-  // Build status for each contract/student
+  // Build status for each student
   const studentStatuses: StudentAcceptanceStatus[] = [];
 
-  for (const contract of contracts) {
-    // Skip contracts without studentId
-    if (!contract.studentId) {
-      continue;
-    }
-
-    // Get student data with user info (hybrid approach)
-    const student = await getStudentWithUser(contract.studentId);
-
-    if (!student) {
-      continue;
-    }
-
+  for (const student of students) {
     // Check if student has accepted this regulation
     const acceptance = acceptanceMap.get(student.id);
+
+    // Try to get active contract for this student (optional)
+    const contract = await getActiveContractByStudent(student.id);
 
     const studentStatus: StudentAcceptanceStatus = {
       // Student info
@@ -106,11 +97,11 @@ export const getAcceptanceStatusByResidence = async (
       studentName: student.name,
       studentEmail: student.email,
 
-      // Contract info
-      contractId: contract.id,
-      roomNumber: contract.roomTypeId || 'N/A', // Using roomTypeId as room number placeholder
-      contractStartDate: contract.checkIn,
-      contractEndDate: contract.checkOut,
+      // Contract info (optional - may not exist yet)
+      contractId: contract?.id,
+      roomNumber: contract?.roomTypeName || 'N/A',
+      contractStartDate: contract?.startDate,
+      contractEndDate: contract?.endDate,
 
       // Acceptance status
       status: acceptance ? 'accepted' : 'pending',

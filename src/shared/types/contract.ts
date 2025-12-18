@@ -15,7 +15,10 @@ export interface Contract {
   // Residence information (denormalized)
   residenceId: string;
   residenceName: string;
-  roomNumber: string;
+  
+  // Room type information (denormalized)
+  roomTypeId: string;
+  roomTypeName: string;
 
   // Contract dates
   startDate: Timestamp;
@@ -52,7 +55,7 @@ export interface Contract {
 export interface CreateContractInput {
   studentId: string;
   residenceId: string;
-  roomNumber: string;
+  roomTypeId: string;
   startDate: Date;
   endDate: Date;
   monthlyValue: number;
@@ -68,7 +71,7 @@ export interface CreateContractInput {
  * Input data for updating an existing contract
  */
 export interface UpdateContractInput {
-  roomNumber?: string;
+  roomTypeId?: string;
   endDate?: Date;
   monthlyValue?: number;
   monthlyKwhLimit?: number;
@@ -87,4 +90,6 @@ export interface ContractFilters {
   studentId?: string;
   status?: 'active' | 'terminated';
   searchTerm?: string;         // Search in student name/email
+  limit?: number;              // Maximum number of results to return
+  offset?: number;             // Number of results to skip
 }

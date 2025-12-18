@@ -60,7 +60,7 @@ export const createStudentAccount = async (
     });
 
     return studentId;
-  } catch (error: any) {
+  } catch (error) {
     // Handle specific Firebase Auth errors
     if (error.code === 'auth/email-already-in-use') {
       throw new Error('A user with this email already exists');
@@ -89,6 +89,44 @@ export const getStudentById = async (studentId: string): Promise<Student | null>
     id: studentDoc.id,
     ...studentDoc.data(),
   } as Student;
+};
+
+/**
+ * Get all students for a specific residence
+ * @param residenceId The residence ID
+ * @returns Array of students with user data
+ */
+export const getStudentsByResidence = async (
+  residenceId: string
+): Promise<StudentWithUser[]> => {
+  // Query students by residenceId
+  const studentsQuery = query(
+    collection(db, 'students'),
+    where('residenceId', '==', residenceId)
+  );
+  const studentsSnapshot = await getDocs(studentsQuery);
+
+  // Fetch user data for each student
+  const studentsWithUser: StudentWithUser[] = [];
+  
+  for (const studentDoc of studentsSnapshot.docs) {
+    const student = {
+      id: studentDoc.id,
+      ...studentDoc.data(),
+    } as Student;
+
+    const user = await getUserById(student.id);
+    if (user) {
+      studentsWithUser.push({
+        ...student,
+        email: user.email,
+        name: user.name,
+        needsPasswordChange: user.needsPasswordChange,
+      });
+    }
+  }
+
+  return studentsWithUser;
 };
 
 /**

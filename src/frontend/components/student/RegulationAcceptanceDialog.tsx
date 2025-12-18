@@ -46,11 +46,11 @@ export const RegulationAcceptanceDialog = ({
     <Dialog open={true} onOpenChange={() => {}}>
       {/* onOpenChange empty to prevent dismissal */}
       <DialogContent
-        className="sm:max-w-3xl max-h-[90vh]"
+        className="sm:max-w-3xl max-h-[90vh] flex flex-col"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>
             {isReAcceptance ? "Updated Regulations" : "Residence Regulations"}
           </DialogTitle>
@@ -61,7 +61,7 @@ export const RegulationAcceptanceDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 flex-1 overflow-y-auto">
           {/* Re-acceptance Alert Banner */}
           {isReAcceptance && previousAcceptance && (
             <Alert variant="default" className="border-amber-200 bg-amber-50">
@@ -127,7 +127,7 @@ export const RegulationAcceptanceDialog = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0 border-t pt-4 mt-4">
           <Button
             onClick={handleAccept}
             disabled={!hasRead || !agreed || isAccepting}

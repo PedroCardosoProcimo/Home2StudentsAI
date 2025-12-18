@@ -6,11 +6,11 @@ export interface StudentAcceptanceStatus {
   studentName: string;
   studentEmail: string;
 
-  // Contract info
-  contractId: string;
-  roomNumber: string;
-  contractStartDate: Timestamp;
-  contractEndDate: Timestamp;
+  // Contract info (optional - students may not have contracts yet)
+  contractId?: string;
+  roomNumber: string; // roomTypeName from contract, or 'N/A' if no contract
+  contractStartDate?: Timestamp;
+  contractEndDate?: Timestamp;
 
   // Acceptance status
   status: 'accepted' | 'pending';

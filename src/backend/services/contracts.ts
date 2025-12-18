@@ -18,7 +18,7 @@ import type {
   ContractFilters,
 } from '@/shared/types';
 import { getStudentWithUser } from './students';
-import { getResidenceById } from './residences';
+import { getResidenceById, getRoomTypeById } from './residences';
 
 const CONTRACTS_COLLECTION = 'contracts';
 
@@ -69,6 +69,12 @@ export const createContract = async (
     throw new Error('Residence not found');
   }
 
+  // Denormalize room type data
+  const roomType = await getRoomTypeById(data.roomTypeId);
+  if (!roomType) {
+    throw new Error('Room type not found');
+  }
+
   const now = Timestamp.now();
 
   // Prepare contract data
@@ -78,7 +84,8 @@ export const createContract = async (
     studentEmail: student.email,
     residenceId: data.residenceId,
     residenceName: residence.name,
-    roomNumber: data.roomNumber,
+    roomTypeId: data.roomTypeId,
+    roomTypeName: roomType.name,
     startDate: Timestamp.fromDate(data.startDate),
     endDate: Timestamp.fromDate(data.endDate),
     monthlyValue: data.monthlyValue,
@@ -148,8 +155,14 @@ export const updateContract = async (
     updatedBy: data.updatedBy,
   };
 
-  if (data.roomNumber !== undefined) {
-    updateData.roomNumber = data.roomNumber;
+  // Handle room type update (fetch new room type name if roomTypeId changed)
+  if (data.roomTypeId !== undefined) {
+    const roomType = await getRoomTypeById(data.roomTypeId);
+    if (!roomType) {
+      throw new Error('Room type not found');
+    }
+    updateData.roomTypeId = data.roomTypeId;
+    updateData.roomTypeName = roomType.name;
   }
 
   if (data.endDate !== undefined) {
@@ -340,6 +353,14 @@ export const getContracts = async (
         contract.studentName.toLowerCase().includes(searchLower) ||
         contract.studentEmail.toLowerCase().includes(searchLower)
     );
+  }
+
+  // Apply pagination (limit/offset)
+  if (filters.offset !== undefined) {
+    contracts = contracts.slice(filters.offset);
+  }
+  if (filters.limit !== undefined) {
+    contracts = contracts.slice(0, filters.limit);
   }
 
   return contracts;

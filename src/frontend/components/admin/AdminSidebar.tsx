@@ -8,7 +8,8 @@ import {
   LogOut,
   Menu,
   X,
-  CheckCircle2
+  CheckCircle2,
+  FileText
 } from "lucide-react";
 import { cn } from "@/frontend/lib/utils";
 import { useAdminAuth } from "@/frontend/contexts/AdminAuthContext";
@@ -20,6 +21,7 @@ const navItems = [
   { to: "/admin/residences", icon: Building2, label: "Residences" },
   { to: "/admin/room-types", icon: BedDouble, label: "Room Types" },
   { to: "/admin/bookings", icon: CalendarCheck, label: "Bookings" },
+  { to: "/admin/contracts", icon: FileText, label: "Contracts" },
   { to: "/admin/acceptance-status", icon: CheckCircle2, label: "Acceptance Status" },
   { to: "/admin/settings", icon: Settings, label: "Settings" },
 ];
