@@ -48,7 +48,7 @@ export const changeStudentPassword = async (
       needsPasswordChange: false,
       updatedAt: Timestamp.now(),
     });
-  } catch (error: any) {
+  } catch (error) {
     // Handle specific Firebase Auth errors with user-friendly messages
     if (error.code === 'auth/wrong-password') {
       throw new Error('Current password is incorrect');

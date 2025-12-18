@@ -112,6 +112,7 @@ export const createContract = async (
     residenceName: residence.name,
     roomTypeId: booking.roomTypeId,
     roomTypeName: roomType.name,
+    roomNumber: data.roomNumber,
     startDate: Timestamp.fromDate(data.startDate),
     endDate: Timestamp.fromDate(data.endDate),
     monthlyValue: data.monthlyValue,
@@ -217,6 +218,10 @@ export const updateContract = async (
 
   if (data.contractFilePath !== undefined) {
     updateData.contractFilePath = data.contractFilePath;
+  }
+
+  if (data.roomNumber !== undefined) {
+    updateData.roomNumber = data.roomNumber;
   }
 
   await updateDoc(docRef, updateData);

@@ -6,6 +6,7 @@ import { Badge } from '@/frontend/components/ui/badge';
 import { useRegulationsByResidence } from '@/backend/hooks/useRegulations';
 import type { Regulation } from '@/shared/types';
 import { cn } from '@/frontend/lib/utils';
+import { Timestamp } from 'firebase/firestore';
 
 interface RegulationHistoryProps {
   residenceId: string;
@@ -59,9 +60,9 @@ interface HistoryItemProps {
 
 function HistoryItem({ regulation, isFirst }: HistoryItemProps) {
   // Format date
-  const formatDate = (timestamp: any): string => {
+  const formatDate = (timestamp: Timestamp): string => {
     try {
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const date = timestamp.toDate();
       return format(date, 'MMM d, yyyy');
     } catch (error) {
       return 'Unknown date';
@@ -69,9 +70,9 @@ function HistoryItem({ regulation, isFirst }: HistoryItemProps) {
   };
 
   // Format time
-  const formatTime = (timestamp: any): string => {
+  const formatTime = (timestamp: Timestamp): string => {
     try {
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const date = timestamp.toDate();
       return format(date, 'h:mm a');
     } catch (error) {
       return '';

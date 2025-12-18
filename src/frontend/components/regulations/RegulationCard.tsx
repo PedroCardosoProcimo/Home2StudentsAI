@@ -24,6 +24,7 @@ import { useAdminAuth } from '@/frontend/contexts/AdminAuthContext';
 import { useDeleteRegulation, useSetActiveRegulation } from '@/backend/hooks/useRegulations';
 import type { Regulation } from '@/shared/types';
 import { cn } from '@/frontend/lib/utils';
+import { Timestamp } from 'firebase/firestore';
 
 interface RegulationCardProps {
   regulation: Regulation;
@@ -45,9 +46,9 @@ export function RegulationCard({ regulation }: RegulationCardProps) {
   };
 
   // Format date
-  const formatDate = (timestamp: any): string => {
+  const formatDate = (timestamp: Timestamp): string => {
     try {
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const date = timestamp.toDate();
       return format(date, 'MMM d, yyyy');
     } catch (error) {
       return 'Unknown date';

@@ -19,6 +19,7 @@ export interface Contract {
   // Room type information (denormalized)
   roomTypeId: string;
   roomTypeName: string;
+  roomNumber: string;
 
   // Contract dates
   startDate: Timestamp;
@@ -55,6 +56,7 @@ export interface Contract {
  */
 export interface CreateContractInput {
   studentId: string;
+  roomNumber: string;
   startDate: Date;
   endDate: Date;
   monthlyValue: number;
@@ -71,6 +73,7 @@ export interface CreateContractInput {
  */
 export interface UpdateContractInput {
   roomTypeId?: string;
+  roomNumber?: string;
   endDate?: Date;
   monthlyValue?: number;
   monthlyKwhLimit?: number;

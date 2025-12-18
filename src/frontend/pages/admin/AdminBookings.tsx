@@ -100,7 +100,7 @@ const AdminBookings = () => {
 
       setIsConfirmDialogOpen(false);
       setIsDetailModalOpen(false);
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = err.message || "Failed to process booking. Please try again.";
       toast({
         title: "Error",
