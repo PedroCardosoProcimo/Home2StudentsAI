@@ -28,11 +28,10 @@ export const StudentAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setUser(user);
 
       if (user) {
-        // Check if user exists in students collection
-        // Similar to how admin checks work (via Firestore, not custom claims)
+        // Check if user exists in users collection with role='student'
         try {
-          const studentDoc = await getDoc(doc(db, 'students', user.uid));
-          setIsStudent(studentDoc.exists());
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          setIsStudent(userDoc.exists() && userDoc.data()?.role === 'student');
         } catch (error) {
           console.error('Error checking student status:', error);
           setIsStudent(false);

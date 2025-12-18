@@ -7,6 +7,8 @@ import {
   useRecordRegulationAcceptance,
 } from "@/backend/hooks/useStudentRegulation";
 import { RegulationAcceptanceDialog } from "@/frontend/components/student/RegulationAcceptanceDialog";
+import { PasswordChangeDialog } from "@/frontend/components/student/PasswordChangeDialog";
+import { useChangePassword } from "@/backend/hooks/usePasswordChange";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/backend/hooks/use-toast";
 
@@ -30,6 +32,9 @@ export const StudentPortalGuard = ({ children }: StudentPortalGuardProps) => {
 
   // Mutation for recording acceptance
   const recordAcceptance = useRecordRegulationAcceptance();
+
+  // Mutation for password change
+  const changePassword = useChangePassword();
 
   // Loading state
   if (authLoading || studentLoading || acceptanceLoading) {
@@ -61,6 +66,43 @@ export const StudentPortalGuard = ({ children }: StudentPortalGuardProps) => {
           </p>
         </div>
       </div>
+    );
+  }
+
+  // Password change required - show blocking dialog
+  if (student.needsPasswordChange) {
+    const handlePasswordChange = async (
+      currentPassword: string,
+      newPassword: string
+    ) => {
+      try {
+        await changePassword.mutateAsync({
+          studentId: user.uid,
+          currentPassword,
+          newPassword,
+        });
+
+        toast({
+          title: "Password Changed",
+          description: "Your password has been updated successfully!",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to change password",
+          variant: "destructive",
+        });
+        throw error; // Re-throw so dialog can handle it
+      }
+    };
+
+    return (
+      <PasswordChangeDialog
+        studentId={user.uid}
+        studentEmail={student.email}
+        onPasswordChange={handlePasswordChange}
+        isChanging={changePassword.isPending}
+      />
     );
   }
 

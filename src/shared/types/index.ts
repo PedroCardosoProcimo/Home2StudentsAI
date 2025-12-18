@@ -47,15 +47,32 @@ export interface Booking {
   updatedAt: Timestamp;
 }
 
-export interface Student {
-  id: string;
+// User - unified authentication record for all users (admins and students)
+export interface User {
+  id: string; // Firebase Auth UID
   email: string;
   name: string;
+  role: 'admin' | 'student';
+  needsPasswordChange: boolean; // Only true for students on first login (always false for admins)
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// Student - student-specific data (references User via matching id)
+export interface Student {
+  id: string; // Same as User.id (Firebase Auth UID)
   phone: string;
   residenceId: string;
   bookingId: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+// StudentWithUser - Combined view for convenience (used in UI)
+export interface StudentWithUser extends Student {
+  email: string;
+  name: string;
+  needsPasswordChange: boolean;
 }
 
 export interface RegulationAcceptance {

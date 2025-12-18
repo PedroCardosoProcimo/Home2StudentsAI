@@ -1,7 +1,6 @@
 import { getActiveRegulation } from './regulations';
 import { getActiveContractsByResidence } from './contracts';
-import { hasAcceptedRegulation } from './regulationAcceptance';
-import { getStudentById } from './students';
+import { getStudentWithUser } from './students';
 import { getResidenceById } from './residences';
 import type {
   AcceptanceStatusSummary,
@@ -91,8 +90,8 @@ export const getAcceptanceStatusByResidence = async (
       continue;
     }
 
-    // Get student data
-    const student = await getStudentById(contract.studentId);
+    // Get student data with user info (hybrid approach)
+    const student = await getStudentWithUser(contract.studentId);
 
     if (!student) {
       continue;

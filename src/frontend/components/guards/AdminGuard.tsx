@@ -23,9 +23,9 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
       }
 
       try {
-        // Check if user exists in admins collection
-        const adminDoc = await getDoc(doc(db, "admins", user.uid));
-        setIsAdmin(adminDoc.exists());
+        // Check if user exists in users collection with role='admin'
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        setIsAdmin(userDoc.exists() && userDoc.data()?.role === 'admin');
       } catch (error) {
         console.error("Error checking admin status:", error);
         setIsAdmin(false);

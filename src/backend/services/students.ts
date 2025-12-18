@@ -11,10 +11,12 @@ import {
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, secondaryAuth } from '@/backend/lib/firebase';
-import type { Student } from '@/shared/types';
+import type { Student, StudentWithUser } from '@/shared/types';
+import { getUserById } from './users';
 
 /**
- * Creates a student account with Firebase Auth and Firestore document
+ * Creates a student account with Firebase Auth and Firestore documents
+ * Hybrid approach: creates both user and student records
  * Uses secondary auth instance to avoid logging out the admin
  *
  * @throws Error if email already exists or creation fails
@@ -28,7 +30,7 @@ export const createStudentAccount = async (
   bookingId: string
 ): Promise<string> => {
   try {
-    // Create Firebase Auth user on secondary auth instance
+    // Step 1: Create Firebase Auth user on secondary auth instance
     // This doesn't affect the admin's login session
     const userCredential = await createUserWithEmailAndPassword(
       secondaryAuth,
@@ -38,10 +40,18 @@ export const createStudentAccount = async (
 
     const studentId = userCredential.user.uid;
 
-    // Create Firestore student document
-    await setDoc(doc(db, 'students', studentId), {
+    // Step 2: Create user record (basic auth info)
+    await setDoc(doc(db, 'users', studentId), {
       email,
       name,
+      role: 'student',
+      needsPasswordChange: true, // Flag for mandatory first-time password change
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+
+    // Step 3: Create student record (student-specific data only)
+    await setDoc(doc(db, 'students', studentId), {
       phone,
       residenceId,
       bookingId,
@@ -50,7 +60,7 @@ export const createStudentAccount = async (
     });
 
     return studentId;
-  } catch (error) {
+  } catch (error: any) {
     // Handle specific Firebase Auth errors
     if (error.code === 'auth/email-already-in-use') {
       throw new Error('A user with this email already exists');
@@ -65,7 +75,8 @@ export const createStudentAccount = async (
 };
 
 /**
- * Get student by ID
+ * Get student by ID (returns student-specific data only)
+ * For full student info with user data, use getStudentWithUser
  */
 export const getStudentById = async (studentId: string): Promise<Student | null> => {
   const studentDoc = await getDoc(doc(db, 'students', studentId));
@@ -81,21 +92,44 @@ export const getStudentById = async (studentId: string): Promise<Student | null>
 };
 
 /**
- * Get student by email
+ * Get student with user data (combined view)
+ * Useful for UI components that need both student and user info
  */
-export const getStudentByEmail = async (email: string): Promise<Student | null> => {
-  const q = query(collection(db, 'students'), where('email', '==', email));
+export const getStudentWithUser = async (studentId: string): Promise<StudentWithUser | null> => {
+  const [student, user] = await Promise.all([
+    getStudentById(studentId),
+    getUserById(studentId),
+  ]);
+
+  if (!student || !user) {
+    return null;
+  }
+
+  return {
+    ...student,
+    email: user.email,
+    name: user.name,
+    needsPasswordChange: user.needsPasswordChange,
+  };
+};
+
+/**
+ * Get student by email (searches users collection, then gets student data)
+ */
+export const getStudentByEmail = async (email: string): Promise<StudentWithUser | null> => {
+  // Search for user by email
+  const q = query(collection(db, 'users'), where('email', '==', email), where('role', '==', 'student'));
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
     return null;
   }
 
-  const doc = snapshot.docs[0];
-  return {
-    id: doc.id,
-    ...doc.data(),
-  } as Student;
+  const userDoc = snapshot.docs[0];
+  const userId = userDoc.id;
+
+  // Get student data
+  return getStudentWithUser(userId);
 };
 
 /**

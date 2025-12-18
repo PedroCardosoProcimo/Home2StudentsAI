@@ -9,9 +9,11 @@ service cloud.firestore {
     }
 
     // Helper function to check if user is an admin
+    // Updated to check users collection with role='admin'
     function isAdmin() {
       return isAuthenticated() &&
-             request.auth.token.email != null;
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // Helper function to check if user is accessing their own student data
@@ -101,20 +103,51 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Students collection rules
+    // Users collection rules (unified auth for admins and students)
+    match /users/{userId} {
+      // Users can read their own data
+      // Any authenticated user can check if someone is admin (for AdminGuard)
+      allow read: if isAuthenticated() &&
+                    (request.auth.uid == userId || resource.data.role == 'admin');
+
+      // Only admins can create new users (or secondary auth during student creation)
+      allow create: if isAuthenticated() &&
+                      request.resource.data.keys().hasAll([
+                        'email', 'name', 'role',
+                        'needsPasswordChange', 'createdAt', 'updatedAt'
+                      ]) &&
+                      request.resource.data.role in ['admin', 'student'];
+
+      // Users can update their own needsPasswordChange flag
+      // Admins can update any user field
+      allow update: if isAuthenticated() &&
+                      (
+                        (request.auth.uid == userId &&
+                         request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['needsPasswordChange', 'updatedAt']))
+                        ||
+                        isAdmin()
+                      );
+
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+
+    // Students collection rules (hybrid approach - student-specific data only)
     match /students/{studentId} {
       // Students can read their own data, admins can read all
       allow read: if isOwnStudent(studentId) || isAdmin();
 
       // Authenticated users can create students (admin creating via secondary auth)
+      // Updated for hybrid approach: no email/name/needsPasswordChange (those are in users)
       allow create: if isAuthenticated() &&
                       request.resource.data.keys().hasAll([
-                        'email', 'name', 'phone', 'residenceId',
-                        'bookingId', 'createdAt', 'updatedAt'
+                        'phone', 'residenceId', 'bookingId', 'createdAt', 'updatedAt'
                       ]);
 
-      // Students can update their own profile data
-      allow update: if isOwnStudent(studentId);
+      // Students can update their own data
+      // Admins can update any field
+      allow update: if isOwnStudent(studentId) || isAdmin();
 
       // Only admins can delete students
       allow delete: if isAdmin();
