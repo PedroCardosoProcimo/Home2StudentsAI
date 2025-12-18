@@ -182,3 +182,55 @@ export const updateStudent = async (
     updatedAt: Timestamp.now(),
   });
 };
+
+/**
+ * Get all students across all residences
+ * @returns Array of students with user data
+ */
+export const getAllStudents = async (): Promise<StudentWithUser[]> => {
+  const studentsSnapshot = await getDocs(collection(db, 'students'));
+
+  const studentsWithUser: StudentWithUser[] = [];
+
+  for (const studentDoc of studentsSnapshot.docs) {
+    const student = {
+      id: studentDoc.id,
+      ...studentDoc.data(),
+    } as Student;
+
+    const user = await getUserById(student.id);
+    if (user) {
+      studentsWithUser.push({
+        ...student,
+        email: user.email,
+        name: user.name,
+        needsPasswordChange: user.needsPasswordChange,
+      });
+    }
+  }
+
+  return studentsWithUser;
+};
+
+/**
+ * Search students by name or email
+ * @param searchTerm The search term to filter by
+ * @returns Array of students matching the search term
+ */
+export const searchStudents = async (searchTerm: string): Promise<StudentWithUser[]> => {
+  if (!searchTerm.trim()) {
+    return getAllStudents();
+  }
+
+  const searchLower = searchTerm.toLowerCase();
+
+  // Get all students (we need to search across both users and students collections)
+  const allStudents = await getAllStudents();
+
+  // Filter by name or email
+  return allStudents.filter(
+    (student) =>
+      student.name.toLowerCase().includes(searchLower) ||
+      student.email.toLowerCase().includes(searchLower)
+  );
+};

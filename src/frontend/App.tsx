@@ -27,6 +27,9 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AcceptanceStatusDashboard from "./pages/admin/AcceptanceStatusDashboard";
 import AdminContracts from "./pages/admin/AdminContracts";
+import ContractCreate from "./pages/admin/ContractCreate";
+import ContractEdit from "./pages/admin/ContractEdit";
+import ContractDetail from "./pages/admin/ContractDetail";
 
 // Student pages
 import StudentLogin from "./pages/StudentLogin";
@@ -62,6 +65,9 @@ const App = () => (
                 <Route path="room-types" element={<AdminRoomTypes />} />
                 <Route path="bookings" element={<AdminBookings />} />
                 <Route path="contracts" element={<AdminContracts />} />
+                <Route path="contracts/new" element={<ContractCreate />} />
+                <Route path="contracts/:id/edit" element={<ContractEdit />} />
+                <Route path="contracts/:id" element={<ContractDetail />} />
                 <Route path="acceptance-status" element={<AcceptanceStatusDashboard />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
