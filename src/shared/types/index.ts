@@ -137,3 +137,11 @@ export type {
   StudentAcceptanceStatus,
   AcceptanceStatusSummary,
 } from './acceptanceStatus';
+
+// Re-export contract types
+export type {
+  Contract,
+  CreateContractInput,
+  UpdateContractInput,
+  ContractFilters,
+} from './contract';

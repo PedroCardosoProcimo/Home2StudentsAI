@@ -181,6 +181,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Contracts collection rules
+    match /contracts/{contractId} {
+      // Students can read their own contracts, admins can read all
+      allow read: if isAuthenticated() &&
+                    (isAdmin() || resource.data.studentId == request.auth.uid);
+
+      // Only admins can create/update contracts
+      allow create, update: if isAdmin();
+
+      // No one can delete contracts (use termination instead)
+      allow delete: if false;
+    }
+
     // Default: deny all other access
     match /{document=**} {
       allow read, write: if false;
