@@ -2,7 +2,7 @@ import { Toaster } from "@/frontend/components/ui/toaster";
 import { Toaster as Sonner } from "@/frontend/components/ui/sonner";
 import { TooltipProvider } from "@/frontend/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminAuthProvider } from "@/frontend/contexts/AdminAuthContext";
 import { StudentAuthProvider } from "@/frontend/contexts/StudentAuthContext";
 
@@ -34,7 +34,10 @@ import ContractDetail from "./pages/admin/ContractDetail";
 // Student pages
 import StudentLogin from "./pages/StudentLogin";
 import StudentPortal from "./pages/StudentPortal";
-import { StudentPortalGuard } from "./components/guards/StudentPortalGuard";
+import StudentContract from "./pages/StudentContract";
+import StudentDocuments from "./pages/StudentDocuments";
+import StudentProfile from "./pages/StudentProfile";
+import { StudentLayout } from "./components/student/StudentLayout";
 
 const queryClient = new QueryClient();
 
@@ -74,14 +77,13 @@ const App = () => (
 
               {/* Student routes */}
               <Route path="/student/login" element={<StudentLogin />} />
-              <Route
-                path="/student/portal"
-                element={
-                  <StudentPortalGuard>
-                    <StudentPortal />
-                  </StudentPortalGuard>
-                }
-              />
+              <Route path="/student" element={<StudentLayout />}>
+                <Route index element={<Navigate to="/student/dashboard" replace />} />
+                <Route path="dashboard" element={<StudentPortal />} />
+                <Route path="contract" element={<StudentContract />} />
+                <Route path="documents" element={<StudentDocuments />} />
+                <Route path="profile" element={<StudentProfile />} />
+              </Route>
 
               <Route path="*" element={<NotFound />} />
             </Routes>
