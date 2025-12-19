@@ -59,6 +59,35 @@ export const recordRegulationAcceptance = async (
 };
 
 /**
+ * Get acceptance record for a specific student and regulation
+ * @param studentId - The student's user ID
+ * @param regulationId - The regulation document ID
+ * @returns The acceptance record or null if not found
+ */
+export const getAcceptanceRecord = async (
+  studentId: string,
+  regulationId: string
+): Promise<RegulationAcceptance | null> => {
+  const q = query(
+    collection(db, REGULATION_ACCEPTANCES_COLLECTION),
+    where('studentId', '==', studentId),
+    where('regulationId', '==', regulationId)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const doc = snapshot.docs[0];
+  return {
+    id: doc.id,
+    ...doc.data(),
+  } as RegulationAcceptance;
+};
+
+/**
  * Get all regulation acceptances for a student
  * Ordered by acceptance date (most recent first)
  */

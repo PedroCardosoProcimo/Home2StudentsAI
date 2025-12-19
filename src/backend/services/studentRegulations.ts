@@ -1,6 +1,6 @@
 import { getActiveContractByStudent } from './contracts';
 import { getActiveRegulation } from './regulations';
-import { getLatestAcceptanceForResidence } from './regulationAcceptance';
+import { getAcceptanceRecord } from './regulationAcceptance';
 import { MyRegulationStatus } from '@/shared/types';
 
 /**
@@ -27,20 +27,14 @@ export async function getMyRegulationStatus(
     return null;
   }
 
-  // Step 3: Check if student has accepted this specific regulation version
-  const acceptance = await getLatestAcceptanceForResidence(
-    studentId,
-    contract.residenceId
-  );
-
-  // Check if the acceptance is for the current active regulation
-  const hasAccepted = acceptance?.regulationId === regulation.id;
+  // Step 3: Get acceptance record for THIS SPECIFIC regulation
+  const acceptance = await getAcceptanceRecord(studentId, regulation.id);
 
   // Step 4: Return combined data
   return {
     regulation,
-    hasAccepted,
-    acceptance: hasAccepted ? acceptance : undefined, // Only include if it's for current regulation
+    hasAccepted: !!acceptance, // True if acceptance record exists
+    acceptance: acceptance || undefined, // Include acceptance details if exists
     residenceName: contract.residenceName, // For display
   };
 }
