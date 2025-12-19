@@ -145,3 +145,6 @@ export type {
   UpdateContractInput,
   ContractFilters,
 } from './contract';
+
+// Re-export student regulation types
+export type { MyRegulationStatus } from './studentRegulation';

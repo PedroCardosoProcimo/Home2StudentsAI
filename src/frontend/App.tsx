@@ -35,8 +35,8 @@ import ContractDetail from "./pages/admin/ContractDetail";
 import StudentLogin from "./pages/StudentLogin";
 import StudentPortal from "./pages/StudentPortal";
 import StudentContract from "./pages/StudentContract";
-import StudentDocuments from "./pages/StudentDocuments";
 import StudentProfile from "./pages/StudentProfile";
+import StudentRegulations from "./pages/StudentRegulations";
 import { StudentLayout } from "./components/student/StudentLayout";
 
 const queryClient = new QueryClient();
@@ -81,7 +81,7 @@ const App = () => (
                 <Route index element={<Navigate to="/student/dashboard" replace />} />
                 <Route path="dashboard" element={<StudentPortal />} />
                 <Route path="contract" element={<StudentContract />} />
-                <Route path="documents" element={<StudentDocuments />} />
+                <Route path="regulations" element={<StudentRegulations />} />
                 <Route path="profile" element={<StudentProfile />} />
               </Route>
 
