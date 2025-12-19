@@ -18,13 +18,13 @@ export function RegulationPdfViewer({
 }: RegulationPdfViewerProps) {
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh]">
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Residence Regulation - Version {version}</DialogTitle>
         </DialogHeader>
 
         {/* PDF Iframe */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden min-h-0">
           <iframe
             src={url}
             className="w-full h-full rounded border"
