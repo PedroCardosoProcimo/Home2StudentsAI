@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useResidences } from "@/backend/hooks/useResidences";
 import { useAcceptanceStatusByResidence } from "@/backend/hooks/useAcceptanceStatus";
 import {
@@ -116,7 +116,7 @@ const AcceptanceStatusDashboard = () => {
   const totalPages = Math.ceil(filteredStudents.length / pageSize);
 
   // Reset pagination when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [statusFilter, searchQuery, selectedResidenceId]);
 
