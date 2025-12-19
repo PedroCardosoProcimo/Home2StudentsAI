@@ -16,7 +16,7 @@ const StudentLogin = () => {
 
   // If already logged in as student, redirect to portal
   if (user && isStudent) {
-    return <Navigate to="/student/portal" replace />;
+    return <Navigate to="/student" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
