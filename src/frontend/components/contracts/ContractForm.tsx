@@ -7,7 +7,6 @@ import { CalendarIcon, AlertCircle } from "lucide-react";
 import { cn } from "@/frontend/lib/utils";
 import { Button } from "@/frontend/components/ui/button";
 import { Input } from "@/frontend/components/ui/input";
-import { Label } from "@/frontend/components/ui/label";
 import { Calendar } from "@/frontend/components/ui/calendar";
 import {
   Select,
@@ -66,7 +65,7 @@ type ContractFormValues = z.infer<typeof contractSchema>;
 interface ContractFormProps {
   contractId?: string;
   initialData?: Contract;
-  onSuccess?: () => void;
+  onSuccess?: (contractId?: string) => void;
   onCancel?: () => void;
 }
 
@@ -244,7 +243,7 @@ export function ContractForm({
         });
       } else {
         // Create mode - exclude residenceId and roomTypeId
-        await createContract.mutateAsync({
+        const newContract = await createContract.mutateAsync({
           studentId: values.studentId,
           roomNumber: values.roomNumber,
           startDate: values.startDate,
@@ -260,6 +259,9 @@ export function ContractForm({
           title: "Success",
           description: "Contract created successfully",
         });
+
+        onSuccess?.(newContract.id);
+        return;
       }
 
       onSuccess?.();

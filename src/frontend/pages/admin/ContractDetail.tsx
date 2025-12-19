@@ -37,6 +37,7 @@ import { Textarea } from "@/frontend/components/ui/textarea";
 import { useToast } from "@/backend/hooks/use-toast";
 import { getContract } from "@/backend/services/contracts";
 import { useTerminateContract } from "@/backend/hooks/admin/useAdminContracts";
+import { ContractPdfUpload } from "@/frontend/components/contracts/ContractPdfUpload";
 
 export default function ContractDetail() {
   const navigate = useNavigate();
@@ -320,6 +321,9 @@ export default function ContractDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Contract PDF Upload */}
+        <ContractPdfUpload contractId={contract.id} />
       </div>
 
       {/* Terminate Dialog */}

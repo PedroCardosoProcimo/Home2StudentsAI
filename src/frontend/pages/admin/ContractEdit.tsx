@@ -5,6 +5,7 @@ import { Button } from "@/frontend/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/frontend/components/ui/card";
 import { Alert, AlertDescription } from "@/frontend/components/ui/alert";
 import { ContractForm } from "@/frontend/components/contracts/ContractForm";
+import { ContractPdfUpload } from "@/frontend/components/contracts/ContractPdfUpload";
 import { getContract } from "@/backend/services/contracts";
 
 export default function ContractEdit() {
@@ -82,6 +83,9 @@ export default function ContractEdit() {
           />
         </CardContent>
       </Card>
+
+      {/* Contract PDF Upload */}
+      <ContractPdfUpload contractId={contract.id} />
     </div>
   );
 }

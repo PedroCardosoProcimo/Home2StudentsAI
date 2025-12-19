@@ -35,5 +35,20 @@ service firebase.storage {
       allow write: if isAdmin();
       allow delete: if isAdmin();
     }
+
+    // Contract PDFs - match any file in contracts/{contractId}/
+    match /contracts/{contractId}/{fileName} {
+      // Anyone authenticated can read (download) contract PDFs
+      allow read: if isAuthenticated();
+
+      // Only admins can upload contract PDFs
+      // File must be PDF and under 10MB
+      allow write: if isAdmin() &&
+                     request.resource.size <= 10 * 1024 * 1024 &&
+                     request.resource.contentType == 'application/pdf';
+
+      // Only admins can delete contract PDFs
+      allow delete: if isAdmin();
+    }
   }
 }
