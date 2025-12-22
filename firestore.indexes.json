@@ -114,6 +114,22 @@
         { "fieldPath": "studentId", "order": "ASCENDING" },
         { "fieldPath": "startDate", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "energy_consumption",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "residenceId", "order": "ASCENDING" },
+        { "fieldPath": "billingPeriodKey", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "energy_consumption",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "studentId", "order": "ASCENDING" },
+        { "fieldPath": "billingPeriodKey", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

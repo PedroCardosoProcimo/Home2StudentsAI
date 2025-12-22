@@ -484,3 +484,57 @@ export const getActiveContractsByResidence = async (
 export const getAllActiveContracts = async (): Promise<Contract[]> => {
   return getContracts({ status: 'active' });
 };
+
+/**
+ * Find an active contract for a specific room during a billing period
+ * Used by energy consumption module to link consumption to contracts
+ * @param residenceId The residence ID
+ * @param roomNumber The room number
+ * @param month The billing month (1-12)
+ * @param year The billing year
+ * @returns Contract info if found, null otherwise
+ */
+export const findContractForRoom = async (
+  residenceId: string,
+  roomNumber: string,
+  month: number,
+  year: number
+): Promise<{
+  contractId: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  monthlyKwhLimit: number;
+} | null> => {
+  // Query contracts for the residence and room
+  const q = query(
+    collection(db, CONTRACTS_COLLECTION),
+    where('residenceId', '==', residenceId),
+    where('roomNumber', '==', roomNumber),
+    where('status', '==', 'active')
+  );
+
+  const snapshot = await getDocs(q);
+
+  // Check if billing period falls within contract period
+  const billingDate = new Date(year, month - 1, 15); // Mid-month
+
+  for (const doc of snapshot.docs) {
+    const contract = doc.data() as Contract;
+    const startDate = contract.startDate.toDate();
+    const endDate = contract.endDate.toDate();
+
+    // Check if billing date falls within contract period
+    if (billingDate >= startDate && billingDate <= endDate) {
+      return {
+        contractId: doc.id,
+        studentId: contract.studentId,
+        studentName: contract.studentName,
+        studentEmail: contract.studentEmail,
+        monthlyKwhLimit: contract.monthlyKwhLimit,
+      };
+    }
+  }
+
+  return null;
+};

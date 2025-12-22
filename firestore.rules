@@ -194,6 +194,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Energy consumption collection rules
+    match /energy_consumption/{consumptionId} {
+      // Students can read their own consumption records, admins can read all
+      allow read: if isAuthenticated() &&
+                    (isAdmin() || resource.data.studentId == request.auth.uid);
+
+      // Only admins can create/update consumption records
+      allow create, update: if isAdmin();
+
+      // Only admins can delete consumption records
+      allow delete: if isAdmin();
+    }
+
     // Default: deny all other access
     match /{document=**} {
       allow read, write: if false;

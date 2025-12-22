@@ -9,7 +9,8 @@ import {
   Menu,
   X,
   CheckCircle2,
-  FileText
+  FileText,
+  Zap
 } from "lucide-react";
 import { cn } from "@/frontend/lib/utils";
 import { useAdminAuth } from "@/frontend/contexts/AdminAuthContext";
@@ -22,6 +23,7 @@ const navItems = [
   { to: "/admin/room-types", icon: BedDouble, label: "Room Types" },
   { to: "/admin/bookings", icon: CalendarCheck, label: "Bookings" },
   { to: "/admin/contracts", icon: FileText, label: "Contracts" },
+  { to: "/admin/energy", icon: Zap, label: "Energy Consumption" },
   { to: "/admin/acceptance-status", icon: CheckCircle2, label: "Acceptance Status" },
   { to: "/admin/settings", icon: Settings, label: "Settings" },
 ];

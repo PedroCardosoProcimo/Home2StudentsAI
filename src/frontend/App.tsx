@@ -30,6 +30,8 @@ import AdminContracts from "./pages/admin/AdminContracts";
 import ContractCreate from "./pages/admin/ContractCreate";
 import ContractEdit from "./pages/admin/ContractEdit";
 import ContractDetail from "./pages/admin/ContractDetail";
+import EnergyConsumption from "./pages/admin/EnergyConsumption";
+import EnergyConsumptionNew from "./pages/admin/EnergyConsumptionNew";
 
 // Student pages
 import StudentLogin from "./pages/StudentLogin";
@@ -71,6 +73,8 @@ const App = () => (
                 <Route path="contracts/new" element={<ContractCreate />} />
                 <Route path="contracts/:id/edit" element={<ContractEdit />} />
                 <Route path="contracts/:id" element={<ContractDetail />} />
+                <Route path="energy" element={<EnergyConsumption />} />
+                <Route path="energy/new" element={<EnergyConsumptionNew />} />
                 <Route path="acceptance-status" element={<AcceptanceStatusDashboard />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
