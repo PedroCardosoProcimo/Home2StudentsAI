@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
@@ -149,15 +149,15 @@ export default function EnergyConsumption() {
 
     if (record.exceedsLimit) {
       return (
-        <Badge variant="destructive" className="gap-1">
-          ⚠️ +{record.excessKwh} kWh
+        <Badge className="gap-1 bg-red-100 text-red-800 border-red-200">
+          +{record.excessKwh} kWh
         </Badge>
       );
     }
 
     return (
-      <Badge variant="success" className="gap-1">
-        ✅ Within limit
+      <Badge className="gap-1 bg-emerald-100 text-emerald-800 border-emerald-200">
+        Within limit
       </Badge>
     );
   };
@@ -178,7 +178,7 @@ export default function EnergyConsumption() {
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-4 items-center">
             <Select value={selectedResidenceId} onValueChange={setSelectedResidenceId}>
-              <SelectTrigger className="w-80">
+              <SelectTrigger className="w-full md:w-80">
                 <SelectValue placeholder="Select residence" />
               </SelectTrigger>
               <SelectContent>

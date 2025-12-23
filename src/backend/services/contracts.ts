@@ -9,6 +9,8 @@ import {
   where,
   orderBy,
   Timestamp,
+  QueryDocumentSnapshot,
+  DocumentData,
 } from 'firebase/firestore';
 import { db } from '@/backend/lib/firebase';
 import type {
@@ -529,7 +531,7 @@ export const findContractForRoom = async (
 
   // Find all overlapping contracts
   const overlappingContracts: Array<{
-    doc: any;
+    doc: QueryDocumentSnapshot<DocumentData>;
     contract: Contract;
     startDate: Date;
     endDate: Date;
@@ -571,7 +573,7 @@ export const findContractForRoom = async (
   if (startDate > periodStart) {
     fullPeriodCoverage = false;
     const startDay = startDate.getDate();
-    coverageNote = `Contrato inicia a ${startDay} de ${getMonthName(month)}. Cobertura parcial do período de faturação.`;
+    coverageNote = `Contract starts on ${getMonthName(month)} ${startDay}. Partial billing period coverage.`;
   }
 
   // Check if contract ends before period end
@@ -579,15 +581,15 @@ export const findContractForRoom = async (
     fullPeriodCoverage = false;
     const endDay = endDate.getDate();
     if (coverageNote) {
-      coverageNote += ` Contrato termina a ${endDay} de ${getMonthName(month)}.`;
+      coverageNote += ` Contract ends on ${getMonthName(month)} ${endDay}.`;
     } else {
-      coverageNote = `Contrato termina a ${endDay} de ${getMonthName(month)}. Cobertura parcial do período de faturação.`;
+      coverageNote = `Contract ends on ${getMonthName(month)} ${endDay}. Partial billing period coverage.`;
     }
   }
 
   // Warn if multiple contracts overlap
   if (overlappingContracts.length > 1) {
-    const additionalNote = `⚠️ Atenção: ${overlappingContracts.length} contratos ativos encontrados para este quarto no período. A usar o primeiro contrato.`;
+    const additionalNote = `⚠️ Warning: ${overlappingContracts.length} active contracts found for this room in the period. Using the first contract.`;
     coverageNote = coverageNote
       ? `${coverageNote} ${additionalNote}`
       : additionalNote;
@@ -606,12 +608,12 @@ export const findContractForRoom = async (
 };
 
 /**
- * Helper function to get Portuguese month name
+ * Helper function to get month name
  */
 function getMonthName(month: number): string {
   const months = [
-    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
   ];
-  return months[month - 1] || 'mês';
+  return months[month - 1] || 'month';
 }

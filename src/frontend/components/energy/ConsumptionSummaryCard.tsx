@@ -23,7 +23,7 @@ export function ConsumptionSummaryCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-amber-500" />
-          Resumo de Consumo
+          Consumption Summary
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -32,7 +32,7 @@ export function ConsumptionSummaryCard({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Target className="h-4 w-4" />
-              <span>Limite Mensal</span>
+              <span>Monthly Limit</span>
             </div>
             <div className="text-2xl font-bold">
               {monthlyLimit !== null ? (
@@ -41,7 +41,7 @@ export function ConsumptionSummaryCard({
                 </>
               ) : (
                 <span className="text-base font-normal text-muted-foreground">
-                  Sem limite definido
+                  No limit set
                 </span>
               )}
             </div>
@@ -51,7 +51,7 @@ export function ConsumptionSummaryCard({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <TrendingUp className="h-4 w-4" />
-              <span>Consumo Médio</span>
+              <span>Average Consumption</span>
             </div>
             <div className="text-2xl font-bold">
               {averageConsumption} <span className="text-base font-normal">kWh</span>
@@ -62,17 +62,17 @@ export function ConsumptionSummaryCard({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <AlertTriangle className="h-4 w-4" />
-              <span>Limite Excedido</span>
+              <span>Limit Exceeded</span>
             </div>
             <div className="text-2xl font-bold">
               {exceededCount}{' '}
               <span className="text-base font-normal">
-                de {totalRecords} {totalRecords === 1 ? 'mês' : 'meses'}
+                of {totalRecords} {totalRecords === 1 ? 'month' : 'months'}
               </span>
             </div>
             {exceededCount > 0 && (
               <p className="text-xs text-amber-600 dark:text-amber-400">
-                Reveja os períodos em destaque abaixo
+                Review the highlighted periods below
               </p>
             )}
           </div>

@@ -5,7 +5,7 @@ import { Calendar } from 'lucide-react';
 import { cn } from '@/frontend/lib/utils';
 
 interface ConsumptionRecordCardProps {
-  period: string;           // e.g., "janeiro de 2025"
+  period: string;           // e.g., "January 2025"
   consumptionKwh: number;
   limitKwh: number | null;
   exceedsLimit: boolean;
@@ -47,15 +47,12 @@ export function ConsumptionRecordCard({
               <span className="font-medium capitalize">{period}</span>
             </div>
             {exceedsLimit ? (
-              <Badge variant="destructive" className="gap-1">
-                ⚠️ +{excessKwh} kWh
+              <Badge className="gap-1 bg-red-100 text-red-800 border-red-200">
+                +{excessKwh} kWh
               </Badge>
             ) : (
-              <Badge
-                variant="default"
-                className="gap-1 bg-green-600 hover:bg-green-700"
-              >
-                ✅ Dentro do limite
+              <Badge className="gap-1 bg-emerald-100 text-emerald-800 border-emerald-200">
+                Within Limit
               </Badge>
             )}
           </div>
@@ -78,20 +75,11 @@ export function ConsumptionRecordCard({
                   value={percentage}
                   className={cn(
                     'h-2',
-                    exceedsLimit ? 'bg-amber-200' : 'bg-secondary'
+                    exceedsLimit ? 'bg-amber-200 [&>div]:bg-amber-500' : 'bg-secondary'
                   )}
-                  style={
-                    exceedsLimit
-                      ? {
-                          // Override progress indicator color for exceeded state
-                          // @ts-ignore - CSS custom property
-                          '--progress-indicator-color': 'rgb(245 158 11)', // amber-500
-                        }
-                      : undefined
-                  }
                 />
                 <div className="mt-1 text-xs text-muted-foreground text-right">
-                  {percentage.toFixed(0)}% do limite
+                  {percentage.toFixed(0)}% of limit
                 </div>
               </>
             )}

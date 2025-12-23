@@ -27,11 +27,11 @@ export function PeriodSelector({ value, onChange, allowAnyPeriod = false }: Peri
     return result;
   }, []);
 
-  // Generate years from 2020 to current year + 1
+  // Generate years from 2000 to current year + 10
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
-    const startYear = 2020;
-    const endYear = currentYear + 1;
+    const startYear = 2000;
+    const endYear = currentYear + 10;
     const result = [];
     for (let year = endYear; year >= startYear; year--) {
       result.push(year);
