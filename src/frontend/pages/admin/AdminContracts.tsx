@@ -196,7 +196,7 @@ const AdminContracts = () => {
       <div className="flex flex-col md:flex-row gap-4">
         {/* Residence Filter */}
         <Select value={residenceFilter} onValueChange={setResidenceFilter}>
-          <SelectTrigger className="w-full md:w-[200px]">
+          <SelectTrigger className="w-full md:w-80">
             <SelectValue placeholder="All Residences" />
           </SelectTrigger>
           <SelectContent>

@@ -17,9 +17,12 @@ import { useAdminResidences } from '@/backend/hooks/admin/useAdminResidences';
 import { findContractForRoom } from '@/backend/services/contracts';
 import type { EnergyConsumption } from '@/shared/types/energy';
 
+type PeriodFilter = 'specific' | 'last3' | 'last6' | 'all';
+
 export default function EnergyConsumption() {
   const navigate = useNavigate();
   const [selectedResidenceId, setSelectedResidenceId] = useState<string>('');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('specific');
   const [selectedPeriod, setSelectedPeriod] = useState({
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -31,13 +34,17 @@ export default function EnergyConsumption() {
 
   // Fetch consumption records
   const { data: consumptionRecords = [], isLoading } = useQuery({
-    queryKey: ['energy-consumption', selectedResidenceId, selectedPeriod],
+    queryKey: ['energy-consumption', selectedResidenceId, periodFilter === 'specific' ? selectedPeriod : periodFilter],
     queryFn: async () => {
       if (!selectedResidenceId) return [];
-      const records = await getConsumptionByResidence(selectedResidenceId, {
-        month: selectedPeriod.month,
-        year: selectedPeriod.year,
-      });
+      // For specific period, filter by month/year; otherwise get all and filter on frontend
+      const records = await getConsumptionByResidence(
+        selectedResidenceId,
+        periodFilter === 'specific' ? {
+          month: selectedPeriod.month,
+          year: selectedPeriod.year,
+        } : undefined
+      );
       
       // Enrich records with contract info if missing
       const enrichedRecords = await Promise.all(
@@ -85,18 +92,45 @@ export default function EnergyConsumption() {
     enabled: !!selectedResidenceId,
   });
 
-  // Filter by search query (case insensitive)
+  // Filter by period and search query
   const filteredRecords = useMemo(() => {
-    if (!searchQuery.trim()) return consumptionRecords;
+    let records = consumptionRecords;
 
-    const query = searchQuery.toLowerCase().trim();
-    return consumptionRecords.filter(
-      (record) =>
-        record.roomNumber.toLowerCase().includes(query) ||
-        record.studentName?.toLowerCase().includes(query) ||
-        record.studentEmail?.toLowerCase().includes(query)
-    );
-  }, [consumptionRecords, searchQuery]);
+    // Apply time period filter (only for non-specific filters)
+    if (periodFilter !== 'specific' && records.length > 0) {
+      const now = new Date();
+      const cutoffDate = new Date();
+
+      if (periodFilter === 'last3') {
+        cutoffDate.setMonth(now.getMonth() - 3);
+      } else if (periodFilter === 'last6') {
+        cutoffDate.setMonth(now.getMonth() - 6);
+      }
+      // For 'all', don't filter by date
+
+      if (periodFilter !== 'all') {
+        records = records.filter(record => {
+          const recordDate = new Date(record.billingPeriod.year, record.billingPeriod.month - 1);
+          return recordDate >= cutoffDate;
+        });
+      }
+    }
+
+    // Apply search query filter (case insensitive with accent normalization)
+    if (searchQuery.trim()) {
+      const normalizeText = (text: string) =>
+        text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const queryNormalized = normalizeText(searchQuery.trim());
+      records = records.filter(
+        (record) =>
+          normalizeText(record.roomNumber).includes(queryNormalized) ||
+          (record.studentName && normalizeText(record.studentName).includes(queryNormalized)) ||
+          (record.studentEmail && normalizeText(record.studentEmail).includes(queryNormalized))
+      );
+    }
+
+    return records;
+  }, [consumptionRecords, periodFilter, searchQuery]);
 
   // Calculate summary
   const summary = useMemo(
@@ -108,7 +142,7 @@ export default function EnergyConsumption() {
     if (!record.studentId) {
       return (
         <Badge variant="secondary" className="gap-1">
-          ℹ️ Sem contrato
+          ℹ️ No contract
         </Badge>
       );
     }
@@ -123,7 +157,7 @@ export default function EnergyConsumption() {
 
     return (
       <Badge variant="success" className="gap-1">
-        ✅ Dentro do limite
+        ✅ Within limit
       </Badge>
     );
   };
@@ -132,20 +166,20 @@ export default function EnergyConsumption() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Consumo de Energia</h1>
+        <h1 className="text-3xl font-bold">Energy Consumption</h1>
         <Button onClick={() => navigate('/admin/energy/new')}>
           <Plus className="mr-2 h-4 w-4" />
-          Registar Consumo
+          Register Consumption
         </Button>
       </div>
 
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-wrap gap-4 items-center">
             <Select value={selectedResidenceId} onValueChange={setSelectedResidenceId}>
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Selecionar residência" />
+              <SelectTrigger className="w-80">
+                <SelectValue placeholder="Select residence" />
               </SelectTrigger>
               <SelectContent>
                 {residences.map((residence) => (
@@ -156,12 +190,26 @@ export default function EnergyConsumption() {
               </SelectContent>
             </Select>
 
-            <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
+            <Select value={periodFilter} onValueChange={(value: PeriodFilter) => setPeriodFilter(value)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="specific">Specific Month</SelectItem>
+                <SelectItem value="last3">Last 3 Months</SelectItem>
+                <SelectItem value="last6">Last 6 Months</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <div className="relative flex-1">
+            {periodFilter === 'specific' && (
+              <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
+            )}
+
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Pesquisar por quarto ou estudante..."
+                placeholder="Search by room or student..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -175,18 +223,21 @@ export default function EnergyConsumption() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Registos de Consumo -{' '}
-            {formatBillingPeriodDisplay(selectedPeriod.month, selectedPeriod.year)}
+            Consumption Records
+            {periodFilter === 'specific' && ` - ${formatBillingPeriodDisplay(selectedPeriod.month, selectedPeriod.year)}`}
+            {periodFilter === 'last3' && ' - Last 3 Months'}
+            {periodFilter === 'last6' && ' - Last 6 Months'}
+            {periodFilter === 'all' && ' - All Time'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">A carregar...</div>
+            <div className="text-center py-8">Loading...</div>
           ) : filteredRecords.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {selectedResidenceId
-                ? 'Nenhum registo encontrado para este período'
-                : 'Selecione uma residência para ver os consumos'}
+                ? 'No records found for this period'
+                : 'Select a residence to view consumption'}
             </div>
           ) : (
             <>
@@ -194,12 +245,12 @@ export default function EnergyConsumption() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4">Quarto</th>
-                      <th className="text-left py-3 px-4">Estudante</th>
-                      <th className="text-left py-3 px-4">Período</th>
+                      <th className="text-left py-3 px-4">Room</th>
+                      <th className="text-left py-3 px-4">Student</th>
+                      <th className="text-left py-3 px-4">Period</th>
                       <th className="text-right py-3 px-4">kWh</th>
-                      <th className="text-right py-3 px-4">Limite</th>
-                      <th className="text-left py-3 px-4">Estado</th>
+                      <th className="text-right py-3 px-4">Limit</th>
+                      <th className="text-left py-3 px-4">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -229,17 +280,17 @@ export default function EnergyConsumption() {
               {/* Summary */}
               <div className="mt-6 pt-4 border-t flex gap-6 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Total de registos: </span>
+                  <span className="text-muted-foreground">Total records: </span>
                   <span className="font-semibold">{summary.totalRecords}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Excederam limite: </span>
+                  <span className="text-muted-foreground">Exceeded limit: </span>
                   <span className="font-semibold text-destructive">
                     {summary.exceededCount}
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Notificações pendentes: </span>
+                  <span className="text-muted-foreground">Pending notifications: </span>
                   <span className="font-semibold text-warning">
                     {summary.pendingNotifications}
                   </span>

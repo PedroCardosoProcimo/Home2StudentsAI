@@ -379,11 +379,13 @@ export const getContracts = async (
   // Apply client-side search filter if provided
   // (Firestore doesn't support LIKE queries, so we filter in memory)
   if (filters.searchTerm) {
-    const searchLower = filters.searchTerm.toLowerCase();
+    const normalizeText = (text: string) =>
+      text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const searchNormalized = normalizeText(filters.searchTerm);
     contracts = contracts.filter(
       (contract) =>
-        contract.studentName.toLowerCase().includes(searchLower) ||
-        contract.studentEmail.toLowerCase().includes(searchLower)
+        normalizeText(contract.studentName).includes(searchNormalized) ||
+        normalizeText(contract.studentEmail).includes(searchNormalized)
     );
   }
 

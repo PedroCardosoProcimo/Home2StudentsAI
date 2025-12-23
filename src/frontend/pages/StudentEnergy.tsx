@@ -24,8 +24,8 @@ const StudentEnergy = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold">Consumo de Energia</h2>
-          <p className="text-muted-foreground mt-1">A carregar histórico...</p>
+          <h2 className="text-3xl font-bold">Energy Consumption</h2>
+          <p className="text-muted-foreground mt-1">Loading history...</p>
         </div>
         <div className="space-y-4">
           {/* Loading skeleton */}
@@ -42,15 +42,15 @@ const StudentEnergy = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold">Consumo de Energia</h2>
-          <p className="text-muted-foreground mt-1">Ver o seu histórico de consumo</p>
+          <h2 className="text-3xl font-bold">Energy Consumption</h2>
+          <p className="text-muted-foreground mt-1">View your consumption history</p>
         </div>
         <div className="text-center py-12">
           <p className="text-destructive font-medium">
-            Erro ao carregar dados de consumo
+            Error loading consumption data
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Por favor, tente recarregar a página
+            Please try reloading the page
           </p>
         </div>
       </div>
@@ -62,13 +62,13 @@ const StudentEnergy = () => {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold">Consumo de Energia</h2>
-          <p className="text-muted-foreground mt-1">Ver o seu histórico de consumo</p>
+          <h2 className="text-3xl font-bold">Energy Consumption</h2>
+          <p className="text-muted-foreground mt-1">View your consumption history</p>
         </div>
         <EmptyState
           icon={BarChart3}
-          title="Sem Dados de Consumo"
-          description="Os seus registos de consumo de energia aparecerão aqui assim que forem registados pela administração."
+          title="No Consumption Data"
+          description="Your energy consumption records will appear here once they are registered by the administration."
         />
       </div>
     );
@@ -79,9 +79,9 @@ const StudentEnergy = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h2 className="text-3xl font-bold">Consumo de Energia</h2>
+        <h2 className="text-3xl font-bold">Energy Consumption</h2>
         <p className="text-muted-foreground mt-1">
-          Acompanhe o seu consumo e compare com o limite mensal
+          Track your consumption and compare it with your monthly limit
         </p>
       </div>
 
@@ -95,7 +95,7 @@ const StudentEnergy = () => {
 
       {/* Consumption History */}
       <div>
-        <h3 className="text-xl font-semibold mb-4">Histórico de Consumo</h3>
+        <h3 className="text-xl font-semibold mb-4">Consumption History</h3>
         <div className="space-y-3">
           {consumptionRecords.map((record) => (
             <ConsumptionRecordCard
@@ -117,9 +117,9 @@ const StudentEnergy = () => {
       {summary.exceededCount > 0 && (
         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            <strong>Nota:</strong> Excedeu o limite de energia em{' '}
-            {summary.exceededCount} {summary.exceededCount === 1 ? 'mês' : 'meses'}.
-            Os custos adicionais serão cobrados de acordo com o seu contrato.
+            <strong>Note:</strong> You exceeded the energy limit in{' '}
+            {summary.exceededCount} {summary.exceededCount === 1 ? 'month' : 'months'}.
+            Additional costs will be charged according to your contract.
           </p>
         </div>
       )}

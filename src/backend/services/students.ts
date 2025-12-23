@@ -222,15 +222,17 @@ export const searchStudents = async (searchTerm: string): Promise<StudentWithUse
     return getAllStudents();
   }
 
-  const searchLower = searchTerm.toLowerCase();
+  const normalizeText = (text: string) =>
+    text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const searchNormalized = normalizeText(searchTerm);
 
   // Get all students (we need to search across both users and students collections)
   const allStudents = await getAllStudents();
 
-  // Filter by name or email
+  // Filter by name or email (case insensitive with accent normalization)
   return allStudents.filter(
     (student) =>
-      student.name.toLowerCase().includes(searchLower) ||
-      student.email.toLowerCase().includes(searchLower)
+      normalizeText(student.name).includes(searchNormalized) ||
+      normalizeText(student.email).includes(searchNormalized)
   );
 };

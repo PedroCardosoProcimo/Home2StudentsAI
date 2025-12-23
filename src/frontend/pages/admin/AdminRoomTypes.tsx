@@ -181,7 +181,7 @@ const AdminRoomTypes = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <Select value={filterResidence} onValueChange={setFilterResidence}>
-          <SelectTrigger className="w-full sm:w-64">
+          <SelectTrigger className="w-full sm:w-80">
             <SelectValue placeholder="Filter by residence" />
           </SelectTrigger>
           <SelectContent>
@@ -260,7 +260,7 @@ const AdminRoomTypes = () => {
                 value={selectedResidenceId}
                 onValueChange={setSelectedResidenceId}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select residence" />
                 </SelectTrigger>
                 <SelectContent>
@@ -313,7 +313,7 @@ const AdminRoomTypes = () => {
                 onValueChange={(value) => setFormData({ ...formData, residenceId: value })}
                 disabled={!!selectedResidenceId || !!selectedRoomType}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select residence" />
                 </SelectTrigger>
                 <SelectContent>

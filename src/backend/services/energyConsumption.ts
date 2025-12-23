@@ -36,7 +36,7 @@ export function parseBillingPeriodKey(key: string): { month: number; year: numbe
 
 export function formatBillingPeriodDisplay(month: number, year: number): string {
   const date = new Date(year, month - 1, 1);
-  return date.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
 export function calculateSummary(records: EnergyConsumption[]): ConsumptionSummary {

@@ -37,12 +37,12 @@ import type { Contract, ContractForPeriod } from '@/shared/types';
 import type { StudentWithUser } from '@/shared/types';
 
 const consumptionSchema = z.object({
-  studentId: z.string().min(1, 'Estudante é obrigatório'),
-  residenceId: z.string().min(1, 'Residência é obrigatória'),
-  roomNumber: z.string().min(1, 'Número do quarto é obrigatório'),
+  studentId: z.string().min(1, 'Student is required'),
+  residenceId: z.string().min(1, 'Residence is required'),
+  roomNumber: z.string().min(1, 'Room number is required'),
   billingMonth: z.number().min(1).max(12),
   billingYear: z.number().min(2020).max(2100),
-  consumptionKwh: z.number().positive('Consumo deve ser positivo'),
+  consumptionKwh: z.number().positive('Consumption must be positive'),
   sendNotification: z.boolean(),
 });
 
@@ -80,15 +80,15 @@ export function EnergyConsumptionForm() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['energy-consumption'] });
       toast({
-        title: 'Sucesso',
-        description: 'Consumo registado com sucesso',
+        title: 'Success',
+        description: 'Consumption registered successfully',
       });
       navigate('/admin/energy');
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro',
-        description: error.message || 'Erro ao registar consumo',
+        title: 'Error',
+        description: error.message || 'Failed to register consumption',
         variant: 'destructive',
       });
     },
@@ -144,8 +144,8 @@ export function EnergyConsumptionForm() {
     // Ensure we have required fields
     if (!data.residenceId || !data.roomNumber) {
       toast({
-        title: 'Erro',
-        description: 'Residência e quarto são obrigatórios',
+        title: 'Error',
+        description: 'Residence and room are required',
         variant: 'destructive',
       });
       return;
@@ -214,7 +214,7 @@ export function EnergyConsumptionForm() {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Registar Consumo de Energia</CardTitle>
+        <CardTitle>Register Energy Consumption</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -225,13 +225,13 @@ export function EnergyConsumptionForm() {
               name="studentId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Estudante *</FormLabel>
+                  <FormLabel>Student *</FormLabel>
                   <FormControl>
                     <StudentSearchCombobox
                       value={field.value}
                       onValueChange={handleStudentSelect}
                       disabled={contractsLoading}
-                      placeholder={contractsLoading ? "A carregar..." : "Pesquisar estudante..."}
+                      placeholder={contractsLoading ? "Loading..." : "Search student..."}
                     />
                   </FormControl>
                   <FormMessage />
@@ -243,15 +243,15 @@ export function EnergyConsumptionForm() {
             {selectedContract && (
               <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-1">Residência</div>
+                  <div className="text-sm font-medium text-muted-foreground mb-1">Residence</div>
                   <div className="font-medium">{selectedContract.residenceName}</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-1">Tipo de Quarto</div>
+                  <div className="text-sm font-medium text-muted-foreground mb-1">Room Type</div>
                   <div className="font-medium">{selectedContract.roomTypeName}</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-1">Quarto</div>
+                  <div className="text-sm font-medium text-muted-foreground mb-1">Room</div>
                   <div className="font-medium">{selectedContract.roomNumber}</div>
                 </div>
               </div>
@@ -265,10 +265,10 @@ export function EnergyConsumptionForm() {
                   name="residenceId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Residência *</FormLabel>
+                      <FormLabel>Residence *</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecionar residência" />
+                          <SelectValue placeholder="Select residence" />
                         </SelectTrigger>
                         <SelectContent>
                           {residences.map((residence) => (
@@ -287,9 +287,9 @@ export function EnergyConsumptionForm() {
                   name="roomNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Número do Quarto *</FormLabel>
+                      <FormLabel>Room Number *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: 101A" {...field} />
+                        <Input placeholder="e.g., 101A" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -301,7 +301,7 @@ export function EnergyConsumptionForm() {
             {/* Billing Period and Consumption */}
             <div className="grid grid-cols-2 gap-4">
               <FormItem>
-                <FormLabel>Período de Faturação *</FormLabel>
+                <FormLabel>Billing Period *</FormLabel>
                 <PeriodSelector
                   value={{
                     month: form.watch('billingMonth'),
@@ -311,6 +311,7 @@ export function EnergyConsumptionForm() {
                     form.setValue('billingMonth', period.month);
                     form.setValue('billingYear', period.year);
                   }}
+                  allowAnyPeriod={true}
                 />
               </FormItem>
 
@@ -319,7 +320,7 @@ export function EnergyConsumptionForm() {
                 name="consumptionKwh"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Consumo (kWh) *</FormLabel>
+                    <FormLabel>Consumption (kWh) *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -337,7 +338,7 @@ export function EnergyConsumptionForm() {
             {/* Contract Info Card */}
             {lookupLoading && (
               <Alert>
-                <AlertDescription>A procurar contrato...</AlertDescription>
+                <AlertDescription>Looking for contract...</AlertDescription>
               </Alert>
             )}
 
@@ -346,10 +347,10 @@ export function EnergyConsumptionForm() {
                 <FileText className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-2">
-                    <div className="font-semibold">📋 Contrato Encontrado</div>
+                    <div className="font-semibold">📋 Contract Found</div>
                     <div className="text-sm space-y-1">
-                      <div>Estudante: {contractInfo.studentName}</div>
-                      <div>Limite Mensal: {contractInfo.monthlyKwhLimit} kWh</div>
+                      <div>Student: {contractInfo.studentName}</div>
+                      <div>Monthly Limit: {contractInfo.monthlyKwhLimit} kWh</div>
                     </div>
 
                     {/* Coverage Warning */}
@@ -365,7 +366,7 @@ export function EnergyConsumptionForm() {
                       <div className="mt-3 p-3 bg-destructive/10 rounded-md flex items-start gap-2">
                         <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
                         <div className="text-sm text-destructive">
-                          <strong>Este consumo excede o limite em {excessAmount.toFixed(1)} kWh</strong>
+                          <strong>This consumption exceeds the limit by {excessAmount.toFixed(1)} kWh</strong>
                         </div>
                       </div>
                     )}
@@ -374,7 +375,7 @@ export function EnergyConsumptionForm() {
                       <div className="mt-3 p-3 bg-primary/10 rounded-md flex items-start gap-2">
                         <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
                         <div className="text-sm text-primary">
-                          Consumo dentro do limite contratual
+                          Consumption within contract limit
                         </div>
                       </div>
                     )}
@@ -386,7 +387,7 @@ export function EnergyConsumptionForm() {
             {!lookupLoading && !contractInfo && studentId && residenceId && roomNumber && (
               <Alert>
                 <AlertDescription className="text-sm text-muted-foreground">
-                  ℹ️ Nenhum contrato ativo encontrado para este estudante no período selecionado
+                  ℹ️ No active contract found for this student in the selected period
                 </AlertDescription>
               </Alert>
             )}
@@ -405,7 +406,7 @@ export function EnergyConsumptionForm() {
                       />
                     </FormControl>
                     <FormLabel className="!mt-0">
-                      Enviar notificação por email ao estudante
+                      Send email notification to student
                     </FormLabel>
                   </FormItem>
                 )}
@@ -419,10 +420,10 @@ export function EnergyConsumptionForm() {
                 variant="outline"
                 onClick={() => navigate('/admin/energy')}
               >
-                Cancelar
+                Cancel
               </Button>
               <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? 'A guardar...' : 'Guardar Consumo'}
+                {mutation.isPending ? 'Saving...' : 'Save Consumption'}
               </Button>
             </div>
           </form>
