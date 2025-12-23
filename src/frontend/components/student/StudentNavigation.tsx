@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, FileText, User, ScrollText } from "lucide-react";
+import { Home, FileText, User, ScrollText, Zap } from "lucide-react";
 import { cn } from "@/frontend/lib/utils";
 
 const navItems = [
   { label: "Dashboard", href: "/student/dashboard", icon: Home },
   { label: "My Contract", href: "/student/contract", icon: FileText },
+  { label: "Energy", href: "/student/energy", icon: Zap },
   { label: "Regulations", href: "/student/regulations", icon: ScrollText },
   { label: "Profile", href: "/student/profile", icon: User },
 ];

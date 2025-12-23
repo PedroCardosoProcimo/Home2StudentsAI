@@ -95,3 +95,18 @@ export interface ContractFilters {
   limit?: number;              // Maximum number of results to return
   offset?: number;             // Number of results to skip
 }
+
+/**
+ * Contract information for a specific billing period
+ * Used by energy consumption module to link consumption to contracts
+ */
+export interface ContractForPeriod {
+  contractId: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  monthlyKwhLimit: number;
+  contactEmail: string;
+  fullPeriodCoverage: boolean;  // Does contract cover entire billing month?
+  coverageNote?: string;         // Warning for partial/multiple contracts
+}

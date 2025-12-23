@@ -68,6 +68,17 @@ export interface ConsumptionSummary {
   pendingNotifications: number;
 }
 
+/**
+ * Summary statistics for student consumption view
+ */
+export interface StudentConsumptionSummary {
+  totalRecords: number;
+  totalKwh: number;
+  averageKwh: number;
+  exceededCount: number;
+  currentLimit: number | null;
+}
+
 export interface ContractInfo {
   contractId: string;
   studentId: string;

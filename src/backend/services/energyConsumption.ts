@@ -18,6 +18,7 @@ import {
   CreateEnergyConsumptionInput,
   UpdateEnergyConsumptionInput,
   ConsumptionSummary,
+  StudentConsumptionSummary,
 } from '@/shared/types/energy';
 
 const COLLECTION_NAME = 'energy_consumption';
@@ -45,6 +46,45 @@ export function calculateSummary(records: EnergyConsumption[]): ConsumptionSumma
     pendingNotifications: records.filter(
       r => r.exceedsLimit && !r.notificationSent && r.studentId
     ).length,
+  };
+}
+
+/**
+ * Calculate summary statistics for student consumption view
+ * @param records Array of energy consumption records for a student
+ * @returns Summary with totals, averages, and exceeded count
+ */
+export function calculateStudentConsumptionSummary(
+  records: EnergyConsumption[]
+): StudentConsumptionSummary {
+  if (records.length === 0) {
+    return {
+      totalRecords: 0,
+      totalKwh: 0,
+      averageKwh: 0,
+      exceededCount: 0,
+      currentLimit: null,
+    };
+  }
+
+  // Calculate total consumption
+  const totalKwh = records.reduce((sum, record) => sum + record.consumptionKwh, 0);
+
+  // Calculate average (rounded to 2 decimal places)
+  const averageKwh = Math.round((totalKwh / records.length) * 100) / 100;
+
+  // Count exceeded periods
+  const exceededCount = records.filter(r => r.exceedsLimit).length;
+
+  // Get current limit from most recent record (records are sorted by date desc)
+  const currentLimit = records[0]?.contractMonthlyLimit || null;
+
+  return {
+    totalRecords: records.length,
+    totalKwh,
+    averageKwh,
+    exceededCount,
+    currentLimit,
   };
 }
 

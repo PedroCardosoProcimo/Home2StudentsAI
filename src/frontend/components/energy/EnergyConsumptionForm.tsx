@@ -33,7 +33,7 @@ import { getResidenceById } from '@/backend/services/residences';
 import { useAdminContracts } from '@/backend/hooks/admin/useAdminContracts';
 import { useAdminResidences } from '@/backend/hooks/admin/useAdminResidences';
 import { useToast } from '@/backend/hooks/use-toast';
-import type { Contract } from '@/shared/types';
+import type { Contract, ContractForPeriod } from '@/shared/types';
 import type { StudentWithUser } from '@/shared/types';
 
 const consumptionSchema = z.object({
@@ -48,19 +48,11 @@ const consumptionSchema = z.object({
 
 type FormData = z.infer<typeof consumptionSchema>;
 
-interface ContractInfo {
-  contractId: string;
-  studentId: string;
-  studentName: string;
-  studentEmail: string;
-  monthlyKwhLimit: number;
-}
-
 export function EnergyConsumptionForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [contractInfo, setContractInfo] = useState<ContractInfo | null>(null);
+  const [contractInfo, setContractInfo] = useState<ContractForPeriod | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentWithUser | null>(null);
@@ -359,6 +351,15 @@ export function EnergyConsumptionForm() {
                       <div>Estudante: {contractInfo.studentName}</div>
                       <div>Limite Mensal: {contractInfo.monthlyKwhLimit} kWh</div>
                     </div>
+
+                    {/* Coverage Warning */}
+                    {contractInfo.coverageNote && (
+                      <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md">
+                        <div className="text-sm text-amber-800 dark:text-amber-200">
+                          {contractInfo.coverageNote}
+                        </div>
+                      </div>
+                    )}
 
                     {exceedsLimit && (
                       <div className="mt-3 p-3 bg-destructive/10 rounded-md flex items-start gap-2">

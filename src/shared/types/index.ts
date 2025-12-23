@@ -144,7 +144,18 @@ export type {
   CreateContractInput,
   UpdateContractInput,
   ContractFilters,
+  ContractForPeriod,
 } from './contract';
+
+// Re-export energy consumption types
+export type {
+  EnergyConsumption,
+  CreateEnergyConsumptionInput,
+  UpdateEnergyConsumptionInput,
+  ConsumptionSummary,
+  StudentConsumptionSummary,
+  ContractInfo,
+} from './energy';
 
 // Re-export student regulation types
 export type { MyRegulationStatus } from './studentRegulation';

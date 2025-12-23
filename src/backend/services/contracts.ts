@@ -16,6 +16,7 @@ import type {
   CreateContractInput,
   UpdateContractInput,
   ContractFilters,
+  ContractForPeriod,
   Booking,
 } from '@/shared/types';
 import { getStudentWithUser } from './students';
@@ -488,24 +489,32 @@ export const getAllActiveContracts = async (): Promise<Contract[]> => {
 /**
  * Find an active contract for a specific room during a billing period
  * Used by energy consumption module to link consumption to contracts
+ * Handles edge cases including:
+ * - Mid-month contract starts/ends
+ * - Multiple overlapping contracts
+ * - Partial period coverage
+ *
  * @param residenceId The residence ID
  * @param roomNumber The room number
  * @param month The billing month (1-12)
  * @param year The billing year
- * @returns Contract info if found, null otherwise
+ * @returns Contract info with coverage details, or null if no contract found
  */
 export const findContractForRoom = async (
   residenceId: string,
   roomNumber: string,
   month: number,
   year: number
-): Promise<{
-  contractId: string;
-  studentId: string;
-  studentName: string;
-  studentEmail: string;
-  monthlyKwhLimit: number;
-} | null> => {
+): Promise<ContractForPeriod | null> => {
+  // Calculate billing period boundaries
+  // First day of billing month at 00:00:00
+  const periodStart = new Date(year, month - 1, 1);
+  periodStart.setHours(0, 0, 0, 0);
+
+  // Last day of billing month at 23:59:59
+  const periodEnd = new Date(year, month, 0);
+  periodEnd.setHours(23, 59, 59, 999);
+
   // Query contracts for the residence and room
   const q = query(
     collection(db, CONTRACTS_COLLECTION),
@@ -516,25 +525,91 @@ export const findContractForRoom = async (
 
   const snapshot = await getDocs(q);
 
-  // Check if billing period falls within contract period
-  const billingDate = new Date(year, month - 1, 15); // Mid-month
+  // Find all overlapping contracts
+  const overlappingContracts: Array<{
+    doc: any;
+    contract: Contract;
+    startDate: Date;
+    endDate: Date;
+  }> = [];
 
   for (const doc of snapshot.docs) {
     const contract = doc.data() as Contract;
-    const startDate = contract.startDate.toDate();
-    const endDate = contract.endDate.toDate();
+    const contractStart = contract.startDate.toDate();
+    const contractEnd = contract.endDate.toDate();
 
-    // Check if billing date falls within contract period
-    if (billingDate >= startDate && billingDate <= endDate) {
-      return {
-        contractId: doc.id,
-        studentId: contract.studentId,
-        studentName: contract.studentName,
-        studentEmail: contract.studentEmail,
-        monthlyKwhLimit: contract.monthlyKwhLimit,
-      };
+    // Check if contract overlaps with billing period
+    // Overlap occurs if: contractStart <= periodEnd AND contractEnd >= periodStart
+    if (contractStart <= periodEnd && contractEnd >= periodStart) {
+      overlappingContracts.push({
+        doc,
+        contract,
+        startDate: contractStart,
+        endDate: contractEnd,
+      });
     }
   }
 
-  return null;
+  // No contracts found
+  if (overlappingContracts.length === 0) {
+    return null;
+  }
+
+  // Sort by start date (earliest first)
+  overlappingContracts.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+  // Take the first overlapping contract
+  const { doc, contract, startDate, endDate } = overlappingContracts[0];
+
+  // Determine coverage type
+  let fullPeriodCoverage = true;
+  let coverageNote: string | undefined = undefined;
+
+  // Check if contract starts after period start
+  if (startDate > periodStart) {
+    fullPeriodCoverage = false;
+    const startDay = startDate.getDate();
+    coverageNote = `Contrato inicia a ${startDay} de ${getMonthName(month)}. Cobertura parcial do período de faturação.`;
+  }
+
+  // Check if contract ends before period end
+  if (endDate < periodEnd) {
+    fullPeriodCoverage = false;
+    const endDay = endDate.getDate();
+    if (coverageNote) {
+      coverageNote += ` Contrato termina a ${endDay} de ${getMonthName(month)}.`;
+    } else {
+      coverageNote = `Contrato termina a ${endDay} de ${getMonthName(month)}. Cobertura parcial do período de faturação.`;
+    }
+  }
+
+  // Warn if multiple contracts overlap
+  if (overlappingContracts.length > 1) {
+    const additionalNote = `⚠️ Atenção: ${overlappingContracts.length} contratos ativos encontrados para este quarto no período. A usar o primeiro contrato.`;
+    coverageNote = coverageNote
+      ? `${coverageNote} ${additionalNote}`
+      : additionalNote;
+  }
+
+  return {
+    contractId: doc.id,
+    studentId: contract.studentId,
+    studentName: contract.studentName,
+    studentEmail: contract.studentEmail,
+    monthlyKwhLimit: contract.monthlyKwhLimit,
+    contactEmail: contract.contactEmail,
+    fullPeriodCoverage,
+    coverageNote,
+  };
 };
+
+/**
+ * Helper function to get Portuguese month name
+ */
+function getMonthName(month: number): string {
+  const months = [
+    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+  ];
+  return months[month - 1] || 'mês';
+}
