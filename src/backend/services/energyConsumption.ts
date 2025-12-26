@@ -4,6 +4,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -255,9 +256,5 @@ export async function deleteEnergyConsumption(id: string): Promise<void> {
     throw new Error('Consumption record not found');
   }
 
-  await updateDoc(docRef, {
-    deleted: true,
-    deletedAt: serverTimestamp(),
-    deletedBy: user.uid,
-  });
+  await deleteDoc(docRef);
 }

@@ -23,12 +23,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/frontend/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/frontend/components/ui/dialog';
+import { Label } from '@/frontend/components/ui/label';
 import { PeriodSelector } from '@/frontend/components/energy/PeriodSelector';
 import {
   getConsumptionByResidence,
   calculateSummary,
   formatBillingPeriodDisplay,
   deleteEnergyConsumption,
+  updateEnergyConsumption,
 } from '@/backend/services/energyConsumption';
 import { useAdminResidences } from '@/backend/hooks/admin/useAdminResidences';
 import { useSendConsumptionNotification } from '@/backend/hooks/admin/useEnergyNotifications';
@@ -52,9 +61,12 @@ export default function EnergyConsumption() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<EnergyConsumption | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [recordToEdit, setRecordToEdit] = useState<EnergyConsumption | null>(null);
+  const [editFormData, setEditFormData] = useState({ consumptionKwh: 0 });
 
   // Fetch residences
-  const { data: residences = [], isLoading: residencesLoading } = useAdminResidences();
+  const { data: residences = [] } = useAdminResidences();
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -72,6 +84,28 @@ export default function EnergyConsumption() {
       toast({
         title: 'Error',
         description: error.message || 'Failed to delete consumption record',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { consumptionKwh: number } }) =>
+      updateEnergyConsumption(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['energy-consumption'] });
+      toast({
+        title: 'Success',
+        description: 'Consumption record updated successfully',
+      });
+      setEditDialogOpen(false);
+      setRecordToEdit(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update consumption record',
         variant: 'destructive',
       });
     },
@@ -209,11 +243,9 @@ export default function EnergyConsumption() {
 
   // Action handlers
   const handleEdit = (record: EnergyConsumption) => {
-    // For now, we can navigate to edit page or implement inline edit
-    toast({
-      title: 'Edit functionality',
-      description: 'Edit functionality will be implemented',
-    });
+    setRecordToEdit(record);
+    setEditFormData({ consumptionKwh: record.consumptionKwh });
+    setEditDialogOpen(true);
   };
 
   const handleDelete = (record: EnergyConsumption) => {
@@ -225,6 +257,25 @@ export default function EnergyConsumption() {
     if (recordToDelete) {
       deleteMutation.mutate(recordToDelete.id);
     }
+  };
+
+  const handleSaveEdit = () => {
+    if (!recordToEdit) return;
+
+    // Validate
+    if (!editFormData.consumptionKwh || editFormData.consumptionKwh <= 0) {
+      toast({
+        title: 'Validation Error',
+        description: 'Consumption must be a positive number',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    updateMutation.mutate({
+      id: recordToEdit.id,
+      data: { consumptionKwh: editFormData.consumptionKwh },
+    });
   };
 
   const handleSendEmail = (record: EnergyConsumption) => {
@@ -412,22 +463,81 @@ export default function EnergyConsumption() {
         </CardContent>
       </Card>
 
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Consumption Record</DialogTitle>
+          </DialogHeader>
+          {recordToEdit && (
+            <div className="space-y-4 py-4">
+              {/* Record Info */}
+              <div className="p-3 bg-muted rounded-md text-sm space-y-1">
+                <div><strong>Room:</strong> {recordToEdit.roomNumber}</div>
+                <div><strong>Student:</strong> {recordToEdit.studentName || 'N/A'}</div>
+                <div><strong>Period:</strong> {formatBillingPeriodDisplay(recordToEdit.billingPeriod.month, recordToEdit.billingPeriod.year)}</div>
+                {recordToEdit.contractMonthlyLimit && (
+                  <div><strong>Limit:</strong> {recordToEdit.contractMonthlyLimit} kWh</div>
+                )}
+              </div>
+
+              {/* Editable Field */}
+              <div className="space-y-2">
+                <Label htmlFor="consumptionKwh">Consumption (kWh) *</Label>
+                <Input
+                  id="consumptionKwh"
+                  type="number"
+                  step="0.01"
+                  placeholder="0"
+                  value={editFormData.consumptionKwh || ""}
+                  onChange={(e) => setEditFormData({ consumptionKwh: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+
+              {/* Show if exceeds limit */}
+              {recordToEdit.contractMonthlyLimit && editFormData.consumptionKwh > recordToEdit.contractMonthlyLimit && (
+                <div className="p-3 bg-destructive/10 rounded-md text-sm text-destructive">
+                  <strong>Warning:</strong> This consumption exceeds the limit by {(editFormData.consumptionKwh - recordToEdit.contractMonthlyLimit).toFixed(1)} kWh
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={updateMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Consumption Record</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this consumption record?
-              {recordToDelete && (
-                <div className="mt-3 p-3 bg-muted rounded-md text-sm">
-                  <div><strong>Room:</strong> {recordToDelete.roomNumber}</div>
-                  <div><strong>Student:</strong> {recordToDelete.studentName || 'N/A'}</div>
-                  <div><strong>Period:</strong> {formatBillingPeriodDisplay(recordToDelete.billingPeriod.month, recordToDelete.billingPeriod.year)}</div>
-                  <div><strong>Consumption:</strong> {recordToDelete.consumptionKwh} kWh</div>
-                </div>
-              )}
-              This action cannot be undone.
+            <AlertDialogDescription asChild>
+              <div>
+                <p>Are you sure you want to delete this consumption record?</p>
+                {recordToDelete && (
+                  <div className="mt-3 p-3 bg-muted rounded-md text-sm">
+                    <div><strong>Room:</strong> {recordToDelete.roomNumber}</div>
+                    <div><strong>Student:</strong> {recordToDelete.studentName || 'N/A'}</div>
+                    <div><strong>Period:</strong> {formatBillingPeriodDisplay(recordToDelete.billingPeriod.month, recordToDelete.billingPeriod.year)}</div>
+                    <div><strong>Consumption:</strong> {recordToDelete.consumptionKwh} kWh</div>
+                  </div>
+                )}
+                <p className="mt-2">This action cannot be undone.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
