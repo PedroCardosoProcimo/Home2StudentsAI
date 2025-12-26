@@ -6,9 +6,11 @@ import { Input } from "@/frontend/components/ui/input";
 import { Label } from "@/frontend/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/frontend/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/backend/hooks/use-toast";
 
 const StudentLogin = () => {
   const { user, isStudent, login } = useStudentAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,7 +26,13 @@ const StudentLogin = () => {
     setError("");
 
     if (!email || !password) {
-      setError("Please enter both email and password");
+      const errorMsg = "Please enter both email and password";
+      setError(errorMsg);
+      toast({
+        title: "Missing credentials",
+        description: errorMsg,
+        variant: "destructive",
+      });
       return;
     }
 
@@ -34,15 +42,24 @@ const StudentLogin = () => {
       // Navigation will happen automatically via guard
     } catch (err) {
       const error = err as { code?: string };
+      let errorMsg = "";
+
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        setError("Invalid email or password");
+        errorMsg = "Invalid email or password";
       } else if (error.code === 'auth/invalid-email') {
-        setError("Invalid email format");
+        errorMsg = "Invalid email format";
       } else if (error.code === 'auth/too-many-requests') {
-        setError("Too many failed attempts. Please try again later.");
+        errorMsg = "Too many failed attempts. Please try again later.";
       } else {
-        setError("An error occurred. Please try again.");
+        errorMsg = "An error occurred. Please try again.";
       }
+
+      setError(errorMsg);
+      toast({
+        title: "Login failed",
+        description: errorMsg,
+        variant: "destructive",
+      });
       setSubmitting(false);
     }
   };

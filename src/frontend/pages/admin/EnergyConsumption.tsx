@@ -1,26 +1,48 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Mail, Pencil, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/frontend/components/ui/button';
 import { Input } from '@/frontend/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/frontend/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/frontend/components/ui/card';
 import { Badge } from '@/frontend/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/frontend/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/frontend/components/ui/alert-dialog';
 import { PeriodSelector } from '@/frontend/components/energy/PeriodSelector';
 import {
   getConsumptionByResidence,
   calculateSummary,
   formatBillingPeriodDisplay,
+  deleteEnergyConsumption,
 } from '@/backend/services/energyConsumption';
 import { useAdminResidences } from '@/backend/hooks/admin/useAdminResidences';
+import { useSendConsumptionNotification } from '@/backend/hooks/admin/useEnergyNotifications';
 import { findContractForRoom } from '@/backend/services/contracts';
+import { useToast } from '@/backend/hooks/use-toast';
 import type { EnergyConsumption } from '@/shared/types/energy';
 
 type PeriodFilter = 'specific' | 'last3' | 'last6' | 'all';
 
 export default function EnergyConsumption() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const sendNotification = useSendConsumptionNotification();
   const [selectedResidenceId, setSelectedResidenceId] = useState<string>('');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('specific');
   const [selectedPeriod, setSelectedPeriod] = useState({
@@ -28,9 +50,32 @@ export default function EnergyConsumption() {
     year: new Date().getFullYear(),
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<EnergyConsumption | null>(null);
 
   // Fetch residences
   const { data: residences = [], isLoading: residencesLoading } = useAdminResidences();
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteEnergyConsumption,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['energy-consumption'] });
+      toast({
+        title: 'Success',
+        description: 'Consumption record deleted successfully',
+      });
+      setDeleteDialogOpen(false);
+      setRecordToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete consumption record',
+        variant: 'destructive',
+      });
+    },
+  });
 
   // Fetch consumption records
   const { data: consumptionRecords = [], isLoading } = useQuery({
@@ -162,6 +207,38 @@ export default function EnergyConsumption() {
     );
   };
 
+  // Action handlers
+  const handleEdit = (record: EnergyConsumption) => {
+    // For now, we can navigate to edit page or implement inline edit
+    toast({
+      title: 'Edit functionality',
+      description: 'Edit functionality will be implemented',
+    });
+  };
+
+  const handleDelete = (record: EnergyConsumption) => {
+    setRecordToDelete(record);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (recordToDelete) {
+      deleteMutation.mutate(recordToDelete.id);
+    }
+  };
+
+  const handleSendEmail = (record: EnergyConsumption) => {
+    if (!record.studentEmail) {
+      toast({
+        title: 'Cannot send email',
+        description: 'No email address found for this student',
+        variant: 'destructive',
+      });
+      return;
+    }
+    sendNotification.mutate(record);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -251,6 +328,7 @@ export default function EnergyConsumption() {
                       <th className="text-right py-3 px-4">kWh</th>
                       <th className="text-right py-3 px-4">Limit</th>
                       <th className="text-left py-3 px-4">Status</th>
+                      <th className="text-center py-3 px-4">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -271,6 +349,39 @@ export default function EnergyConsumption() {
                           {record.contractMonthlyLimit || '—'}
                         </td>
                         <td className="py-3 px-4">{getStatusBadge(record)}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSendEmail(record)}
+                              disabled={!record.studentEmail || sendNotification.isPending}
+                              title="Send email notification"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(record)}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(record)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -300,6 +411,37 @@ export default function EnergyConsumption() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Consumption Record</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this consumption record?
+              {recordToDelete && (
+                <div className="mt-3 p-3 bg-muted rounded-md text-sm">
+                  <div><strong>Room:</strong> {recordToDelete.roomNumber}</div>
+                  <div><strong>Student:</strong> {recordToDelete.studentName || 'N/A'}</div>
+                  <div><strong>Period:</strong> {formatBillingPeriodDisplay(recordToDelete.billingPeriod.month, recordToDelete.billingPeriod.year)}</div>
+                  <div><strong>Consumption:</strong> {recordToDelete.consumptionKwh} kWh</div>
+                </div>
+              )}
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

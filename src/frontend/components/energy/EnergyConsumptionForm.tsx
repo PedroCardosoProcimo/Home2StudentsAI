@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -76,6 +76,12 @@ export function EnergyConsumptionForm() {
   const { data: contracts = [], isLoading: contractsLoading } = useAdminContracts({ status: 'active' });
   // Fetch residences for getting residence names
   const { data: residences = [] } = useAdminResidences();
+
+  // Get list of student IDs with active contracts for filtering
+  const studentIdsWithContracts = useMemo(
+    () => Array.from(new Set(contracts.map(c => c.studentId))),
+    [contracts]
+  );
 
   const mutation = useMutation({
     mutationFn: createEnergyConsumption,
@@ -233,6 +239,7 @@ export function EnergyConsumptionForm() {
                       onValueChange={handleStudentSelect}
                       disabled={contractsLoading}
                       placeholder={contractsLoading ? "Loading..." : "Search student..."}
+                      filterStudentIds={studentIdsWithContracts}
                     />
                   </FormControl>
                   <FormMessage />
@@ -326,7 +333,8 @@ export function EnergyConsumptionForm() {
                       <Input
                         type="number"
                         step="0.01"
-                        {...field}
+                        placeholder="0"
+                        value={field.value || ""}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>

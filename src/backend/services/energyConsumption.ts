@@ -243,3 +243,21 @@ export async function markNotificationSent(id: string): Promise<void> {
     updatedBy: auth.currentUser?.uid || 'system',
   });
 }
+
+export async function deleteEnergyConsumption(id: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated');
+
+  const docRef = doc(db, COLLECTION_NAME, id);
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    throw new Error('Consumption record not found');
+  }
+
+  await updateDoc(docRef, {
+    deleted: true,
+    deletedAt: serverTimestamp(),
+    deletedBy: user.uid,
+  });
+}

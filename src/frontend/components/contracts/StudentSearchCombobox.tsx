@@ -24,6 +24,7 @@ interface StudentSearchComboboxProps {
   onValueChange: (studentId: string, student: StudentWithUser | null) => void;
   disabled?: boolean;
   placeholder?: string;
+  filterStudentIds?: string[]; // Optional: only show students with these IDs
 }
 
 export function StudentSearchCombobox({
@@ -31,6 +32,7 @@ export function StudentSearchCombobox({
   onValueChange,
   disabled = false,
   placeholder = "Select student...",
+  filterStudentIds,
 }: StudentSearchComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -46,12 +48,20 @@ export function StudentSearchCombobox({
   }, [searchTerm]);
 
   // Fetch students - only when popover is open and search term is not empty
-  const { data: students = [], isLoading } = useQuery({
+  const { data: allStudents = [], isLoading } = useQuery({
     queryKey: ["students", "search", debouncedSearchTerm],
     queryFn: () => searchStudents(debouncedSearchTerm),
     enabled: open && debouncedSearchTerm.trim().length > 0,
     staleTime: 30000, // 30 seconds
   });
+
+  // Filter students if filterStudentIds is provided
+  const students = React.useMemo(() => {
+    if (!filterStudentIds || filterStudentIds.length === 0) {
+      return allStudents;
+    }
+    return allStudents.filter(student => filterStudentIds.includes(student.id));
+  }, [allStudents, filterStudentIds]);
 
   // Find selected student
   const selectedStudent = students.find((s) => s.id === value);
