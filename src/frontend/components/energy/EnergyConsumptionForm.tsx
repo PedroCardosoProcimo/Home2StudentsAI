@@ -32,6 +32,7 @@ import { findContractForRoom } from '@/backend/services/contracts';
 import { getResidenceById } from '@/backend/services/residences';
 import { useAdminContracts } from '@/backend/hooks/admin/useAdminContracts';
 import { useAdminResidences } from '@/backend/hooks/admin/useAdminResidences';
+import { useSendConsumptionNotification } from '@/backend/hooks/admin/useEnergyNotifications';
 import { useToast } from '@/backend/hooks/use-toast';
 import type { Contract, ContractForPeriod } from '@/shared/types';
 import type { StudentWithUser } from '@/shared/types';
@@ -52,6 +53,7 @@ export function EnergyConsumptionForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const sendNotification = useSendConsumptionNotification();
   const [contractInfo, setContractInfo] = useState<ContractForPeriod | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
@@ -190,7 +192,7 @@ export function EnergyConsumptionForm() {
       }
     }
 
-    await mutation.mutateAsync({
+    const record = await mutation.mutateAsync({
       residenceId: data.residenceId,
       residenceName: residenceName || 'Unknown',
       roomNumber: data.roomNumber,
@@ -204,10 +206,9 @@ export function EnergyConsumptionForm() {
       contractMonthlyLimit: finalContractInfo?.monthlyKwhLimit || null,
     });
 
-    // TODO: Send notification if checkbox checked
-    if (data.sendNotification && finalContractInfo) {
-      // await sendConsumptionNotification(record.id);
-      console.log('Notification would be sent');
+    // Send notification if checkbox checked and student has email
+    if (data.sendNotification && record.studentEmail) {
+      sendNotification.mutate(record);
     }
   };
 
